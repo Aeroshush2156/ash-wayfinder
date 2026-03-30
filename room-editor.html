@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Editor — Floor Plan</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0d0d1a;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────────── */
+.toolbar {
+  background: #1a1a2e;
+  border-bottom: 1px solid #2a2a45;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.toolbar-title  { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+.toolbar-hint   { font-size: 11px; color: #6666aa; margin-top: 1px; }
+.spacer         { flex: 1; }
+.room-count     { font-size: 12px; color: #8888aa; white-space: nowrap; }
+
+.btn {
+  font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px;
+  border: none; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap;
+}
+.btn-blue   { background: #4f7fff; color: #fff; }
+.btn-blue:hover   { background: #3a6fef; }
+.btn-ghost  { background: transparent; color: #8888aa; border: 1.5px solid #2a2a45; }
+.btn-ghost:hover  { color: #fff; border-color: #4f7fff; }
+
+.zoom-row { display: flex; gap: 4px; }
+.zoom-btn {
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  background: #2a2a45; border: none; border-radius: 8px; color: #fff; font-size: 18px;
+  cursor: pointer; font-family: inherit; line-height: 1; transition: background .1s;
+}
+.zoom-btn:hover { background: #4f7fff; }
+
+/* ── Map area ────────────────────────────────────────────────────────────── */
+.map-scroll {
+  flex: 1;
+  overflow: auto;
+  cursor: crosshair;
+  -webkit-overflow-scrolling: touch;
+}
+.editor-svg { display: block; width: 100%; height: auto; }
+
+/* ── Popup overlay ───────────────────────────────────────────────────────── */
+.overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(3px);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.open { display: flex; }
+
+.popup {
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 22px 18px;
+  width: 300px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  animation: popIn .14s ease-out;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.94) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)  translateY(0); }
+}
+
+.popup-title { font-size: 15px; font-weight: 700; color: #111; margin-bottom: 16px; }
+
+.field { margin-bottom: 13px; }
+.field label {
+  display: block; font-size: 10px; font-weight: 700; color: #aaa;
+  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 5px;
+}
+.field input, .field select {
+  width: 100%; height: 40px;
+  border: 1.5px solid #e0dfd9; border-radius: 9px;
+  padding: 0 12px; font-size: 15px; font-family: inherit; color: #111;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus {
+  border-color: #4f7fff;
+  box-shadow: 0 0 0 3px rgba(79,127,255,.12);
+}
+
+.popup-coords {
+  font-size: 11px; color: #ccc; margin-bottom: 14px;
+  font-variant-numeric: tabular-nums; letter-spacing: .2px;
+}
+
+.popup-actions { display: flex; gap: 8px; }
+.popup-actions .btn { flex: 1; height: 38px; border-radius: 10px; font-size: 13px; }
+.btn-cancel { background: #f4f3ef; color: #555; }
+.btn-cancel:hover { background: #e8e7e1; }
+.btn-save   { background: #4f7fff; color: #fff; }
+.btn-save:hover   { background: #3a6fef; }
+.btn-delete { background: #dc2626; color: #fff; }
+.btn-delete:hover { background: #b91c1c; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div>
+    <div class="toolbar-title">Room Editor</div>
+    <div class="toolbar-hint">Drag to draw · Click a room to edit · Left = Ground, Right = First floor</div>
+  </div>
+  <div class="spacer"></div>
+  <span class="room-count" id="room-count">0 rooms</span>
+  <div class="zoom-row">
+    <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">−</button>
+    <button class="zoom-btn" onclick="zoomReset()" title="Reset zoom" style="font-size:13px">⊙</button>
+    <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
+  </div>
+  <button class="btn btn-ghost" onclick="clearAll()">Clear All</button>
+  <button class="btn btn-blue" id="export-btn" onclick="exportRooms()">📋 Export JSON</button>
+</div>
+
+<div class="map-scroll" id="map-scroll">
+  <svg class="editor-svg" id="editor-svg"
+       viewBox="0 0 2339 1654"
+       preserveAspectRatio="xMidYMid meet">
+    <image href="floorplan.jpg" x="0" y="0" width="2339" height="1654"
+           preserveAspectRatio="xMidYMid meet"/>
+    <g id="rooms-layer"></g>
+    <!-- live draw preview -->
+    <rect id="draw-preview"
+          x="0" y="0" width="0" height="0"
+          fill="rgba(79,127,255,.15)" stroke="#4f7fff" stroke-width="3"
+          stroke-dasharray="10 5" rx="4"
+          visibility="hidden" pointer-events="none"/>
+  </svg>
+</div>
+
+<!-- New-room / edit-room popup -->
+<div class="overlay" id="overlay">
+  <div class="popup" id="popup">
+    <div class="popup-title" id="popup-title">New Room</div>
+    <div class="field">
+      <label>Room Number</label>
+      <input type="text" id="input-room" placeholder="e.g. 1.56" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>Floor</label>
+      <select id="input-floor">
+        <option value="0">Ground Floor</option>
+        <option value="1">First Floor</option>
+      </select>
+    </div>
+    <div class="popup-coords" id="popup-coords"></div>
+    <div class="popup-actions">
+      <button class="btn btn-cancel" onclick="closePopup()">Cancel</button>
+      <button class="btn btn-delete" id="btn-delete" onclick="deleteRoom()" style="display:none">Delete</button>
+      <button class="btn btn-save"   onclick="saveRoom()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let rooms   = JSON.parse(localStorage.getItem('rooms') || '[]');
+let zoom    = 1;
+let drawing = false;
+let startPt = null;       // SVG coords where drag started
+let pending = null;       // { x, y, w, h } awaiting popup confirmation
+let editId  = null;       // id of room currently being edited
+let suppressNextClick = false;  // prevent room-click after a draw ends on a room
+
+// ─── SVG COORDINATE HELPER ───────────────────────────────────────────────────
+function svgPt(e) {
+  const svg = document.getElementById('editor-svg');
+  const p   = svg.createSVGPoint();
+  p.x = e.clientX;
+  p.y = e.clientY;
+  return p.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+// ─── DRAW ────────────────────────────────────────────────────────────────────
+const svgEl   = document.getElementById('editor-svg');
+const preview = document.getElementById('draw-preview');
+
+svgEl.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  if (e.target.closest('[data-rid]')) return; // let click-to-edit handle this
+  if (document.getElementById('overlay').classList.contains('open')) return;
+  e.preventDefault();
+  drawing = true;
+  startPt = svgPt(e);
+  preview.setAttribute('x', startPt.x);
+  preview.setAttribute('y', startPt.y);
+  preview.setAttribute('width', 0);
+  preview.setAttribute('height', 0);
+  preview.setAttribute('visibility', 'visible');
+});
+
+document.addEventListener('mousemove', e => {
+  if (!drawing) return;
+  const cur = svgPt(e);
+  preview.setAttribute('x', Math.min(startPt.x, cur.x));
+  preview.setAttribute('y', Math.min(startPt.y, cur.y));
+  preview.setAttribute('width',  Math.abs(cur.x - startPt.x));
+  preview.setAttribute('height', Math.abs(cur.y - startPt.y));
+});
+
+document.addEventListener('mouseup', e => {
+  if (!drawing) return;
+  drawing = false;
+  preview.setAttribute('visibility', 'hidden');
+
+  const cur = svgPt(e);
+  const x = Math.round(Math.min(startPt.x, cur.x));
+  const y = Math.round(Math.min(startPt.y, cur.y));
+  const w = Math.round(Math.abs(cur.x - startPt.x));
+  const h = Math.round(Math.abs(cur.y - startPt.y));
+
+  if (w < 10 || h < 10) return; // too small — treat as stray click
+
+  suppressNextClick = true;
+  setTimeout(() => { suppressNextClick = false; }, 200);
+
+  pending = { x, y, w, h };
+  editId  = null;
+  openPopupNew();
+});
+
+// ─── POPUP: NEW ROOM ─────────────────────────────────────────────────────────
+function openPopupNew() {
+  // Auto-detect floor: image left half (x < 1170) = ground, right half = first
+  const floor  = pending.x > 1170 ? 1 : 0;
+  const prefix = floor === 1 ? '2.' : '1.';
+
+  document.getElementById('popup-title').textContent  = 'New Room';
+  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('input-room').value         = prefix;
+  document.getElementById('input-floor').value        = floor;
+  document.getElementById('popup-coords').textContent =
+    `x: ${pending.x}  ·  y: ${pending.y}  ·  ${pending.w} × ${pending.h}`;
+
+  document.getElementById('overlay').classList.add('open');
+  requestAnimationFrame(() => {
+    const inp = document.getElementById('input-room');
+    inp.focus();
+    inp.setSelectionRange(inp.value.length, inp.value.length);
+  });
+}
+
+// ─── POPUP: EDIT ROOM ────────────────────────────────────────────────────────
+function openPopupEdit(room) {
+  editId  = room.id;
+  pending = null;
+
+  document.getElementById('popup-title').textContent  = 'Edit Room';
+  document.getElementById('btn-delete').style.display = '';
+  document.getElementById('input-room').value         = room.room;
+  document.getElementById('input-floor').value        = room.floor;
+  document.getElementById('popup-coords').textContent =
+    `x: ${room.x}  ·  y: ${room.y}  ·  ${room.w} × ${room.h}`;
+
+  document.getElementById('overlay').classList.add('open');
+  requestAnimationFrame(() => document.getElementById('input-room').focus());
+}
+
+// ─── POPUP: ACTIONS ──────────────────────────────────────────────────────────
+function closePopup() {
+  document.getElementById('overlay').classList.remove('open');
+  pending = null;
+  editId  = null;
+}
+
+function saveRoom() {
+  const roomNum = document.getElementById('input-room').value.trim();
+  const floor   = parseInt(document.getElementById('input-floor').value, 10);
+
+  if (!roomNum) {
+    document.getElementById('input-room').focus();
+    return;
+  }
+
+  if (editId !== null) {
+    const r = rooms.find(r => r.id === editId);
+    if (r) { r.room = roomNum; r.floor = floor; }
+  } else {
+    rooms.push({ id: Date.now(), room: roomNum, floor, ...pending });
+  }
+
+  persist();
+  render();
+  closePopup();
+}
+
+function deleteRoom() {
+  if (editId === null) return;
+  rooms = rooms.filter(r => r.id !== editId);
+  persist();
+  render();
+  closePopup();
+}
+
+// Close on overlay background click
+document.getElementById('overlay').addEventListener('mousedown', e => {
+  if (e.target === document.getElementById('overlay')) closePopup();
+});
+
+// Keyboard shortcuts inside popup
+document.getElementById('input-room').addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); saveRoom(); }
+  if (e.key === 'Escape') closePopup();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('overlay').classList.contains('open')) {
+    closePopup();
+  }
+});
+
+// ─── CLICK EXISTING ROOM ─────────────────────────────────────────────────────
+function clickRoom(id) {
+  if (suppressNextClick) return;
+  const room = rooms.find(r => r.id === id);
+  if (room) openPopupEdit(room);
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function render() {
+  const layer = document.getElementById('rooms-layer');
+
+  layer.innerHTML = rooms.map(r => {
+    const cx = r.x + r.w / 2;
+    const cy = r.y + r.h / 2;
+    // Font size: fits within the box, clamped to a sensible range
+    const fs = Math.max(8, Math.min(Math.floor(r.w * 0.3), Math.floor(r.h * 0.55), 22));
+
+    return `
+<g data-rid="${r.id}" onclick="clickRoom(${r.id})" style="cursor:pointer">
+  <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="3"
+    fill="rgba(79,127,255,.18)" stroke="#4f7fff" stroke-width="2.5"/>
+  <text x="${cx}" y="${cy}"
+    text-anchor="middle" dominant-baseline="central"
+    font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
+    font-size="${fs}" font-weight="700" fill="#1e3a8a"
+    pointer-events="none">${r.room}</text>
+</g>`;
+  }).join('');
+
+  const n = rooms.length;
+  document.getElementById('room-count').textContent = n + ' room' + (n !== 1 ? 's' : '');
+}
+
+// ─── ZOOM ────────────────────────────────────────────────────────────────────
+function zoomIn()    { zoom = Math.min(zoom * 1.4, 8);   applyZoom(); }
+function zoomOut()   { zoom = Math.max(zoom / 1.4, 0.4); applyZoom(); }
+function zoomReset() { zoom = 1; applyZoom(); }
+
+function applyZoom() {
+  const svg = document.getElementById('editor-svg');
+  if (zoom === 1) {
+    svg.style.width = '';
+  } else {
+    const containerW = document.getElementById('map-scroll').clientWidth;
+    svg.style.width  = Math.round(containerW * zoom) + 'px';
+  }
+}
+
+window.addEventListener('resize', applyZoom);
+
+// ─── PERSISTENCE ─────────────────────────────────────────────────────────────
+function persist() {
+  localStorage.setItem('rooms', JSON.stringify(rooms));
+}
+
+// ─── EXPORT ──────────────────────────────────────────────────────────────────
+function exportRooms() {
+  // Strip internal id, output clean JSON
+  const out  = rooms.map(({ id, ...r }) => r);
+  const json = JSON.stringify(out, null, 2);
+  const btn  = document.getElementById('export-btn');
+
+  navigator.clipboard.writeText(json).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    btn.style.background = '#16a34a';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 2000);
+  }).catch(() => {
+    // Fallback for non-secure contexts (file://)
+    const ta = document.createElement('textarea');
+    ta.value = json;
+    ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    btn.style.background = '#16a34a';
+    setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 2000);
+  });
+}
+
+// ─── CLEAR ALL ───────────────────────────────────────────────────────────────
+function clearAll() {
+  if (!rooms.length) return;
+  if (!confirm(`Delete all ${rooms.length} room${rooms.length !== 1 ? 's' : ''}?`)) return;
+  rooms = [];
+  persist();
+  render();
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

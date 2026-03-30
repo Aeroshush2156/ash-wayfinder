@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Staff Finder — Lincoln High</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">🏫</div>
+  <div class="app-title">Staff Finder
+    <span class="app-sub">2025–2026 · High School</span>
+  </div>
+  <div class="floor-btns">
+    <button class="floor-btn active" onclick="switchFloor(0)" id="fb0">Ground</button>
+    <button class="floor-btn" onclick="switchFloor(1)" id="fb1">First</button>
+  </div>
+</div>
+
+<div class="search-section">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search" type="text" placeholder="Search by name, room, or department…" autocomplete="off" oninput="onSearch(this.value)" onfocus="onSearch(this.value)">
+    <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+    <div class="dropdown" id="dropdown"></div>
+  </div>
+</div>
+
+<div class="status-bar" id="status-bar">
+  <span class="status-pill gray" id="status-pill">No location set</span>
+  <span class="status-text" id="status-text">Tap a zone on the map to set your location</span>
+  <button class="clear-btn" onclick="clearAll()" id="clear-btn">Reset</button>
+</div>
+
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#c7d9ff;border:1.5px solid #4f7fff"></div>You are here</div>
+  <div class="leg"><div class="leg-dot" style="background:#ffc7c7;border:1.5px solid #dc2626"></div>Destination</div>
+  <div class="leg"><div class="leg-dot" style="background:#d1fae5;border:1.5px solid #16a34a"></div>Department zone</div>
+  <div class="leg"><div class="leg-dot" style="background:#fef9c3;border:1.5px solid #ca8a04"></div>Special area</div>
+</div>
+
+<div class="map-wrap" id="map-wrap">
+  <div class="edit-banner" id="edit-banner">
+    <span class="edit-banner-label">✏️ EDIT MODE</span>
+    <span class="edit-banner-hint">Drag to move · Corner/edge handles to resize · Press E to exit</span>
+    <button class="export-zones-btn" id="export-zones-btn" onclick="exportZones()">📋 Export Zones</button>
+  </div>
+  <div class="map-scroll" id="map-scroll">
+    <svg class="overlay-svg" id="overlay-svg"
+         viewBox="0 0 2339 1654"
+         preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M1 1L9 5L1 9" fill="none" stroke="#4f7fff"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <image href="floorplan.jpg" x="0" y="0" width="2339" height="1654"
+             preserveAspectRatio="xMidYMid meet"/>
+      <g id="zones-layer"></g>
+      <g id="rooms-layer"></g>
+    </svg>
+  </div>
+  <div class="zoom-row">
+    <button class="zoom-btn" onclick="zoomIn()">+</button>
+    <button class="zoom-btn" onclick="zoomOut()">−</button>
+    <button class="zoom-btn" onclick="resetZoom()" style="font-size:13px">⊙</button>
+  </div>
+</div>
+
+<div class="info-panel" id="info-panel">
+  <div class="info-header">
+    <div class="info-avatar" id="info-avatar"></div>
+    <div>
+      <div class="info-name" id="info-name"></div>
+      <div class="info-role" id="info-role"></div>
+      <div class="info-badges">
+        <span class="badge badge-room" id="badge-room"></span>
+        <span class="badge badge-floor" id="badge-floor"></span>
+        <span class="badge badge-dept" id="badge-dept"></span>
+      </div>
+    </div>
+  </div>
+  <div class="info-directions">
+    <div class="dir-label">Directions</div>
+    <div class="dir-text" id="dir-text"></div>
+    <div class="raw-room" id="raw-room"></div>
+    <div id="path-instructions" style="display:none"></div>
+    <div id="zone-staff-list" style="display:none"></div>
+  </div>
+</div>
+
+<div class="import-bar">
+  <button class="import-btn" onclick="document.getElementById('csv-input').click()">📋 Import CSV</button>
+  <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSV(this)">
+  <span class="import-label">name, room, floor, department, zone</span>
+  <span class="staff-count" id="staff-count"></span>
+</div>
+
+<script src="js/zones.js"></script>
+<script src="js/search.js"></script>
+<script src="js/pathfinding.js"></script>
+<script src="js/app.js"></script>
+<script src="js/editor.js"></script>
+</body>
+</html>

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waypoint Editor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f172a; color: #f1f5f9;
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+}
+
+.topbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; background: #1e293b;
+  border-bottom: 1px solid #334155; flex-shrink: 0; flex-wrap: wrap;
+}
+.topbar h1 { font-size: 15px; font-weight: 700; white-space: nowrap; }
+
+.floor-btns { display: flex; gap: 4px; }
+.floor-btn {
+  padding: 4px 13px; border: 1px solid #475569; background: transparent;
+  color: #94a3b8; border-radius: 6px; cursor: pointer; font-size: 13px;
+}
+.floor-btn.active { background: #3b82f6; border-color: #3b82f6; color: white; }
+
+.mode-badge {
+  padding: 4px 11px; border-radius: 12px; font-size: 12px;
+  font-weight: 600; background: #334155; color: #94a3b8; white-space: nowrap;
+}
+.mode-badge.shift { background: #7c3aed; color: white; }
+.mode-badge.rmode  { background: #ea580c; color: white; }
+
+.stats { display: flex; gap: 14px; font-size: 12px; color: #64748b; }
+.stat span { color: #e2e8f0; font-weight: 600; }
+
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+.btn {
+  padding: 5px 13px; border: none; border-radius: 6px;
+  cursor: pointer; font-size: 13px; font-weight: 600;
+}
+.btn-export { background: #16a34a; color: white; }
+.btn-export:hover { background: #15803d; }
+.btn-autofloor { background: #7c3aed; color: white; }
+.btn-autofloor:hover { background: #6d28d9; }
+.btn-clear  { background: #dc2626; color: white; }
+.btn-clear:hover  { background: #b91c1c; }
+
+.map-wrap { flex: 1; overflow: auto; background: #0f172a; }
+.overlay-svg { display: block; width: 100%; height: auto; cursor: crosshair; user-select: none; }
+
+.status-bar {
+  padding: 6px 16px; background: #1e293b;
+  border-top: 1px solid #334155; font-size: 12px;
+  color: #94a3b8; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.tooltip {
+  position: fixed; background: #1e293b; border: 1px solid #475569;
+  color: #f1f5f9; padding: 3px 8px; border-radius: 4px;
+  font-size: 11px; pointer-events: none; z-index: 200; display: none;
+}
+
+/* ── Context menu ──────────────────────────────────────────────────────────── */
+.ctx-menu {
+  position: fixed; background: #1e293b; border: 1px solid #475569;
+  border-radius: 6px; padding: 4px 0; z-index: 300; display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5); min-width: 170px;
+}
+.ctx-item {
+  padding: 7px 14px; font-size: 13px; color: #e2e8f0; cursor: pointer;
+}
+.ctx-item:hover { background: #334155; }
+.ctx-item.danger { color: #f87171; }
+.ctx-item.danger:hover { background: #3f1515; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🗺 Waypoint Editor</h1>
+  <div class="floor-btns">
+    <button class="floor-btn active" id="fb0" onclick="switchFloor(0)">Ground</button>
+    <button class="floor-btn"        id="fb1" onclick="switchFloor(1)">First</button>
+  </div>
+  <div class="mode-badge" id="mode-badge">Normal</div>
+  <div class="stats">
+    <div class="stat">Waypoints: <span id="cnt-wp">0</span></div>
+    <div class="stat">Edges: <span id="cnt-ed">0</span></div>
+    <div class="stat">Room links: <span id="cnt-rc">0</span></div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-autofloor" onclick="autoAssignFloors()">⚡ Auto-assign Floors</button>
+    <button class="btn btn-clear"  onclick="clearAll()">🗑 Clear Floor</button>
+    <button class="btn btn-export" onclick="exportData()">⬇ Export JSON</button>
+  </div>
+</div>
+
+<div class="map-wrap" id="map-wrap">
+  <svg class="overlay-svg" id="overlay-svg"
+       viewBox="0 0 2339 1654" preserveAspectRatio="xMidYMid meet">
+    <image href="floorplan.jpg" x="0" y="0" width="2339" height="1654"
+           preserveAspectRatio="xMidYMid meet"/>
+    <g id="rooms-layer"></g>
+    <g id="edges-layer"></g>
+    <g id="connections-layer"></g>
+    <g id="waypoints-layer"></g>
+  </svg>
+</div>
+
+<div class="status-bar" id="status-bar">
+  Click to place waypoint · Shift+click two waypoints to connect · Shift+click edge to delete ·
+  R to toggle room-link mode · Double-click waypoint to delete · ESC to cancel
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-mark">🔶 Mark as Stairwell</div>
+  <div class="ctx-item danger" id="ctx-unmark">✕ Remove Stairwell Tag</div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let waypoints      = [];   // { id, x, y, floor }
+let edges          = [];   // { from, to }
+let roomConnections= [];   // { room, floor, waypointId }
+let rooms          = [];   // loaded from rooms.json
+
+let currentFloor = 0;
+let wpCounter    = 0;
+
+// Interaction state
+let shiftFirst  = null;   // id of first wp selected for an edge
+let rMode       = false;  // R-key room-link mode
+let pendingRoom = null;   // { room, floor } waiting for a waypoint to link to
+let hoveredWpId = null;
+
+// Delay new-waypoint placement so dblclick can cancel it
+let placeTimer  = null;
+
+const SNAP = 10;
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+function saveAll() {
+  localStorage.setItem('wpe_waypoints',   JSON.stringify(waypoints));
+  localStorage.setItem('wpe_edges',       JSON.stringify(edges));
+  localStorage.setItem('wpe_connections', JSON.stringify(roomConnections));
+  localStorage.setItem('wpe_counter',     String(wpCounter));
+}
+
+function loadAll() {
+  try {
+    const w = localStorage.getItem('wpe_waypoints');
+    const e = localStorage.getItem('wpe_edges');
+    const c = localStorage.getItem('wpe_connections');
+    const n = localStorage.getItem('wpe_counter');
+    if (w) waypoints       = JSON.parse(w);
+    if (e) edges           = JSON.parse(e);
+    if (c) roomConnections = JSON.parse(c);
+    if (n) wpCounter       = parseInt(n, 10);
+  } catch (_) {}
+}
+
+// ── Load rooms ────────────────────────────────────────────────────────────────
+fetch('data/rooms.json')
+  .then(r => r.json())
+  .then(data => { rooms = Array.isArray(data) ? data : []; render(); })
+  .catch(() => {});
+
+// ── SVG coordinate helper ─────────────────────────────────────────────────────
+function svgPt(e) {
+  const svg = document.getElementById('overlay-svg');
+  const pt  = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function snap(v) { return Math.round(v / SNAP) * SNAP; }
+
+function nextId() {
+  wpCounter++;
+  return 'wp_' + String(wpCounter).padStart(3, '0');
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  renderRooms();
+  renderEdges();
+  renderConnections();
+  renderWaypoints();
+  updateStats();
+}
+
+function renderRooms() {
+  const layer   = document.getElementById('rooms-layer');
+  const flRooms = rooms.filter(r => r.floor === currentFloor);
+  layer.innerHTML = flRooms.map(r => {
+    const isPending = pendingRoom &&
+                      pendingRoom.room  === r.room &&
+                      pendingRoom.floor === r.floor;
+    return `<rect
+      x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2"
+      fill="${isPending ? 'rgba(234,88,12,0.18)' : 'none'}"
+      stroke="${isPending ? '#ea580c' : 'rgba(148,163,184,0.3)'}"
+      stroke-width="${isPending ? 2 : 1}"
+      pointer-events="${rMode ? 'all' : 'none'}"
+      style="cursor:${rMode ? 'pointer' : 'default'}"
+      class="room-rect"
+      data-room="${r.room}" data-floor="${r.floor}"/>`;
+  }).join('');
+}
+
+function renderEdges() {
+  const layer = document.getElementById('edges-layer');
+  const flIds = new Set(waypoints.filter(w => w.floor === currentFloor).map(w => w.id));
+  layer.innerHTML = edges
+    .filter(e => flIds.has(e.from) && flIds.has(e.to))
+    .map(e => {
+      const a = waypoints.find(w => w.id === e.from);
+      const b = waypoints.find(w => w.id === e.to);
+      if (!a || !b) return '';
+      return `<g class="edge-group" data-from="${e.from}" data-to="${e.to}" style="cursor:pointer">
+        <!-- wide invisible hit area -->
+        <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
+          stroke="transparent" stroke-width="10" stroke-linecap="round"/>
+        <!-- visible line -->
+        <line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
+          stroke="#64748b" stroke-width="1.5" stroke-linecap="round"
+          pointer-events="none"/>
+      </g>`;
+    }).join('');
+}
+
+function renderConnections() {
+  const layer = document.getElementById('connections-layer');
+  layer.innerHTML = roomConnections
+    .filter(c => c.floor === currentFloor)
+    .map(c => {
+      const wp   = waypoints.find(w => w.id === c.waypointId);
+      const room = rooms.find(r => r.room === c.room && r.floor === c.floor);
+      if (!wp || !room) return '';
+      const rx = room.x + room.w / 2, ry = room.y + room.h / 2;
+      return `<line x1="${rx}" y1="${ry}" x2="${wp.x}" y2="${wp.y}"
+        stroke="#f97316" stroke-width="1.5" stroke-dasharray="6 4"
+        opacity="0.75" pointer-events="none"/>`;
+    }).join('');
+}
+
+function renderWaypoints() {
+  const layer = document.getElementById('waypoints-layer');
+  layer.innerHTML = waypoints
+    .filter(w => w.floor === currentFloor)
+    .map(w => {
+      const isSelected  = shiftFirst === w.id;
+      const isHovered   = hoveredWpId === w.id;
+      const isStairwell = !!w.stairwell;
+
+      // Color priority: selected (yellow) > hovered (light blue) > stairwell (orange) > normal (blue)
+      const fill   = isSelected  ? '#fbbf24'
+                   : isHovered   ? '#93c5fd'
+                   : isStairwell ? '#f97316'
+                   :               '#3b82f6';
+      const radius = isSelected ? 8 : 6;
+
+      // ID label: always visible for stairwells, hover/selected only for normal waypoints
+      const showLabel = isHovered || isSelected || isStairwell;
+      const labelText = isStairwell ? `${w.id} [${w.stairwellId}]` : w.id;
+      const label = showLabel
+        ? `<text x="${w.x + 10}" y="${w.y - 9}"
+            font-family="-apple-system,sans-serif" font-size="10" fill="#f1f5f9"
+            stroke="#0f172a" stroke-width="2.5" paint-order="stroke"
+            pointer-events="none">${labelText}</text>`
+        : '';
+
+      // Inner label: stairwell waypoints show "S", others show floor number (0 or 1)
+      const stairMark = `<text x="${w.x}" y="${w.y + 1}" text-anchor="middle" dominant-baseline="central"
+          font-size="8" fill="white" font-weight="700"
+          pointer-events="none">${isStairwell ? 'S' : w.floor}</text>`;
+
+      return `<g class="wp-group" data-id="${w.id}" style="cursor:pointer">
+        <!-- hit area -->
+        <circle cx="${w.x}" cy="${w.y}" r="12" fill="transparent"/>
+        <circle cx="${w.x}" cy="${w.y}" r="${radius}"
+          fill="${fill}" stroke="white" stroke-width="1.5"/>
+        ${stairMark}
+        ${label}
+      </g>`;
+    }).join('');
+}
+
+function updateStats() {
+  document.getElementById('cnt-wp').textContent = waypoints.length;
+  document.getElementById('cnt-ed').textContent = edges.length;
+  document.getElementById('cnt-rc').textContent = roomConnections.length;
+}
+
+// ── Mode display ──────────────────────────────────────────────────────────────
+function updateMode() {
+  const badge  = document.getElementById('mode-badge');
+  const status = document.getElementById('status-bar');
+
+  if (rMode && pendingRoom) {
+    badge.className = 'mode-badge rmode';
+    badge.textContent = `Linking room ${pendingRoom.room} →`;
+    status.textContent = `Click a waypoint to connect it to room ${pendingRoom.room} · ESC to cancel`;
+  } else if (rMode) {
+    badge.className = 'mode-badge rmode';
+    badge.textContent = 'R Mode — Room Link';
+    status.textContent = 'Click a room rectangle to select it, then click a waypoint · ESC to exit R mode';
+  } else if (shiftFirst) {
+    badge.className = 'mode-badge shift';
+    badge.textContent = `Edge from ${shiftFirst} →`;
+    status.textContent = `Click a second waypoint to create edge · Shift+click an edge to delete it · ESC to cancel`;
+  } else {
+    badge.className = 'mode-badge';
+    badge.textContent = 'Normal';
+    status.textContent =
+      'Click to place waypoint · Shift+click two waypoints to connect · Shift+click edge to delete · R = room-link mode · Dbl-click to delete';
+  }
+}
+
+// ── Floor switch ──────────────────────────────────────────────────────────────
+function switchFloor(f) {
+  currentFloor = f;
+  document.getElementById('fb0').classList.toggle('active', f === 0);
+  document.getElementById('fb1').classList.toggle('active', f === 1);
+  shiftFirst  = null;
+  pendingRoom = null;
+  render();
+  updateMode();
+}
+
+// ── SVG click ─────────────────────────────────────────────────────────────────
+document.getElementById('overlay-svg').addEventListener('click', function (e) {
+  const wpEl   = e.target.closest('.wp-group');
+  const edgeEl = e.target.closest('.edge-group');
+  const roomEl = e.target.closest('.room-rect');
+  const pt     = svgPt(e);
+
+  // ── R mode ──────────────────────────────────────────────────────────────────
+  if (rMode) {
+    if (roomEl && !pendingRoom) {
+      pendingRoom = { room: roomEl.dataset.room, floor: parseInt(roomEl.dataset.floor, 10) };
+      render(); updateMode(); return;
+    }
+    if (wpEl && pendingRoom) {
+      const wpId = wpEl.dataset.id;
+      // Replace any existing connection for this room
+      roomConnections = roomConnections.filter(
+        c => !(c.room === pendingRoom.room && c.floor === pendingRoom.floor)
+      );
+      roomConnections.push({ room: pendingRoom.room, floor: pendingRoom.floor, waypointId: wpId });
+      pendingRoom = null;
+      saveAll(); render(); updateMode(); return;
+    }
+    if (!roomEl && !wpEl) {
+      // Clicking empty space while in R mode cancels the pending room
+      pendingRoom = null;
+      render(); updateMode();
+    }
+    return;
+  }
+
+  // ── Shift mode ───────────────────────────────────────────────────────────────
+  if (e.shiftKey) {
+    if (edgeEl && !shiftFirst) {
+      // Delete the clicked edge
+      const { from, to } = edgeEl.dataset;
+      edges = edges.filter(
+        ed => !((ed.from === from && ed.to === to) || (ed.from === to && ed.to === from))
+      );
+      saveAll(); render(); updateMode(); return;
+    }
+    if (wpEl) {
+      const id = wpEl.dataset.id;
+      if (!shiftFirst) {
+        shiftFirst = id;
+      } else if (shiftFirst === id) {
+        shiftFirst = null; // cancel
+      } else {
+        const a = shiftFirst, b = id;
+        const exists = edges.some(
+          ed => (ed.from === a && ed.to === b) || (ed.from === b && ed.to === a)
+        );
+        if (!exists) edges.push({ from: a, to: b });
+        shiftFirst = null;
+        saveAll();
+      }
+      render(); updateMode();
+    }
+    return;
+  }
+
+  // ── Normal mode: place waypoint (delayed so dblclick can cancel) ─────────────
+  if (!wpEl && !edgeEl) {
+    clearTimeout(placeTimer);
+    const x = snap(pt.x), y = snap(pt.y), floor = currentFloor;
+    placeTimer = setTimeout(() => {
+      const id = nextId();
+      waypoints.push({ id, x, y, floor });
+      saveAll(); render(); updateMode();
+    }, 220);
+  }
+});
+
+// ── SVG double-click: delete waypoint ────────────────────────────────────────
+document.getElementById('overlay-svg').addEventListener('dblclick', function (e) {
+  clearTimeout(placeTimer); // cancel any pending placement at same spot
+  const wpEl = e.target.closest('.wp-group');
+  if (!wpEl) return;
+  const id = wpEl.dataset.id;
+  waypoints       = waypoints.filter(w => w.id !== id);
+  edges           = edges.filter(ed => ed.from !== id && ed.to !== id);
+  roomConnections = roomConnections.filter(c => c.waypointId !== id);
+  if (shiftFirst === id) shiftFirst = null;
+  saveAll(); render(); updateMode();
+});
+
+// ── Hover ─────────────────────────────────────────────────────────────────────
+document.getElementById('overlay-svg').addEventListener('mousemove', function (e) {
+  const wpEl   = e.target.closest('.wp-group');
+  const newId  = wpEl ? wpEl.dataset.id : null;
+  if (newId !== hoveredWpId) {
+    hoveredWpId = newId;
+    render(); // re-render to show/hide label
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  if (hoveredWpId) {
+    const wp = waypoints.find(w => w.id === hoveredWpId);
+    if (wp) {
+      tooltip.textContent   = wp.stairwell
+        ? `${wp.id}  (${wp.x}, ${wp.y})  🔶 stairwell: ${wp.stairwellId}`
+        : `${wp.id}  (${wp.x}, ${wp.y})`;
+      tooltip.style.display = 'block';
+      tooltip.style.left    = (e.clientX + 14) + 'px';
+      tooltip.style.top     = (e.clientY - 8)  + 'px';
+    }
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+document.getElementById('overlay-svg').addEventListener('mouseleave', function () {
+  hoveredWpId = null;
+  document.getElementById('tooltip').style.display = 'none';
+  render();
+});
+
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function (e) {
+  if (e.target.tagName === 'INPUT') return;
+
+  if (e.key === 'r' || e.key === 'R') {
+    rMode = !rMode;
+    if (!rMode) pendingRoom = null;
+    render(); updateMode();
+  }
+
+  if (e.key === 'Escape') {
+    shiftFirst  = null;
+    pendingRoom = null;
+    rMode       = false;
+    clearTimeout(placeTimer);
+    render(); updateMode();
+  }
+});
+
+// ── Context menu ─────────────────────────────────────────────────────────────
+let ctxTargetId = null; // waypoint id that the context menu was opened on
+
+document.getElementById('overlay-svg').addEventListener('contextmenu', function (e) {
+  const wpEl = e.target.closest('.wp-group');
+  if (!wpEl) return;
+  e.preventDefault();
+  ctxTargetId = wpEl.dataset.id;
+
+  const wp      = waypoints.find(w => w.id === ctxTargetId);
+  const menu    = document.getElementById('ctx-menu');
+  const markBtn = document.getElementById('ctx-mark');
+  const unmarkBtn = document.getElementById('ctx-unmark');
+
+  markBtn.textContent    = wp && wp.stairwell ? '✏️ Edit Stairwell ID' : '🔶 Mark as Stairwell';
+  unmarkBtn.style.display = (wp && wp.stairwell) ? 'block' : 'none';
+
+  menu.style.left    = e.clientX + 'px';
+  menu.style.top     = e.clientY + 'px';
+  menu.style.display = 'block';
+});
+
+document.getElementById('ctx-mark').addEventListener('click', function () {
+  console.log('[stairwell] ctx-mark clicked, ctxTargetId:', ctxTargetId);
+  const targetId = ctxTargetId;  // capture before hideCtxMenu nulls it
+  hideCtxMenu();
+  if (!targetId) { console.warn('[stairwell] no targetId — aborting'); return; }
+  const wp = waypoints.find(w => w.id === targetId);
+  console.log('[stairwell] waypoint found:', wp);
+  if (!wp) return;
+  const existing = wp.stairwellId || '';
+  const entered = prompt('Enter stairwell ID (e.g. stairs_main, stairs_east):', existing);
+  console.log('[stairwell] prompt returned:', entered);
+  if (!entered || !entered.trim()) return;
+  wp.stairwell   = true;
+  wp.stairwellId = entered.trim();
+  saveAll();
+  console.log('[stairwell] updated waypoint:', JSON.parse(JSON.stringify(wp)));
+  render();
+});
+
+document.getElementById('ctx-unmark').addEventListener('click', function () {
+  console.log('[stairwell] ctx-unmark clicked, ctxTargetId:', ctxTargetId);
+  const targetId = ctxTargetId;  // capture before hideCtxMenu nulls it
+  hideCtxMenu();
+  if (!targetId) return;
+  const wp = waypoints.find(w => w.id === targetId);
+  if (!wp) return;
+  delete wp.stairwell;
+  delete wp.stairwellId;
+  saveAll();
+  console.log('[stairwell] stairwell tag removed from:', targetId);
+  render();
+});
+
+function hideCtxMenu() {
+  document.getElementById('ctx-menu').style.display = 'none';
+  ctxTargetId = null;
+}
+
+// Close context menu on any click or scroll elsewhere
+document.addEventListener('click',  hideCtxMenu);
+document.addEventListener('scroll', hideCtxMenu, true);
+
+// ── Auto-assign floors ────────────────────────────────────────────────────────
+function autoAssignFloors() {
+  let toGround = 0, toFirst = 0;
+  waypoints.forEach(w => {
+    const correct = w.x < 1170 ? 0 : 1;
+    if (w.floor !== correct) {
+      w.floor = correct;
+      if (correct === 0) toGround++; else toFirst++;
+    }
+  });
+  saveAll();
+  render();
+  alert(`Auto-assign complete.\n\nReassigned to Ground (0): ${toGround}\nReassigned to First (1):  ${toFirst}\nAlready correct: ${waypoints.length - toGround - toFirst}`);
+}
+
+// ── Clear floor ───────────────────────────────────────────────────────────────
+function clearAll() {
+  if (!confirm(`Delete all waypoints, edges, and room links on the ${currentFloor === 0 ? 'Ground' : 'First'} floor?`)) return;
+  const flIds = new Set(waypoints.filter(w => w.floor === currentFloor).map(w => w.id));
+  waypoints       = waypoints.filter(w => w.floor !== currentFloor);
+  edges           = edges.filter(ed => !flIds.has(ed.from) && !flIds.has(ed.to));
+  roomConnections = roomConnections.filter(c => c.floor !== currentFloor);
+  shiftFirst = null; pendingRoom = null;
+  saveAll(); render(); updateMode();
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportData() {
+  // Build cross-floor stairwell edges: pair every stairwell waypoint with the
+  // matching stairwellId on the other floor.
+  const stairwellEdges = [];
+  const stairWps = waypoints.filter(w => w.stairwell && w.stairwellId);
+  stairWps.forEach(a => {
+    stairWps.forEach(b => {
+      if (a.floor >= b.floor) return; // only emit each pair once (a.floor < b.floor)
+      if (a.stairwellId !== b.stairwellId) return;
+      stairwellEdges.push({ from: a.id, to: b.id, type: 'stairwell', stairwellId: a.stairwellId });
+    });
+  });
+
+  const allEdges = [...edges, ...stairwellEdges];
+  const data = { waypoints, edges: allEdges, roomConnections };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'waypoints.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadAll();
+render();
+updateMode();
+</script>
+</body>
+</html>
