@@ -11,6 +11,57 @@ let mapScale  = 1;
 let youRoom   = null;   // { room, floor } — user's precise starting room
 let currentPath = null; // last A* result from Pathfinding.findPath()
 
+// ─── BOTTOM SHEET ────────────────────────────────────────────────────────────
+const SHEET_PEEK = 80; // px — height of visible handle in collapsed state
+
+function setSheetState(state) {
+  // state: 'hidden' | 'collapsed' | 'expanded'
+  const sheet = document.getElementById('bottom-sheet');
+  sheet.className = 'bottom-sheet' + (state !== 'hidden' ? ' sheet-' + state : '');
+  // Push page content up so the collapsed handle never covers the map bottom
+  document.body.style.paddingBottom = (state === 'collapsed') ? SHEET_PEEK + 'px' : '';
+}
+
+// Wire up handle tap and swipe gestures once the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const handle    = document.getElementById('sheet-handle');
+  const closeBtn  = document.getElementById('sheet-close-btn');
+  const sheetBody = document.getElementById('sheet-body');
+  let   touchStartY = 0;
+
+  // Tap handle → toggle collapsed ↔ expanded
+  handle.addEventListener('click', e => {
+    if (e.target.closest('#sheet-close-btn')) return;
+    const sheet = document.getElementById('bottom-sheet');
+    if (sheet.classList.contains('sheet-collapsed')) setSheetState('expanded');
+    else if (sheet.classList.contains('sheet-expanded')) setSheetState('collapsed');
+  });
+
+  // ✕ clears everything and hides the sheet
+  closeBtn.addEventListener('click', e => { e.stopPropagation(); clearAll(); });
+
+  // Swipe on handle: up → expand, down → collapse
+  handle.addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  handle.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    const sheet = document.getElementById('bottom-sheet');
+    if (dy < -30) setSheetState('expanded');
+    else if (dy > 30 && sheet.classList.contains('sheet-expanded')) setSheetState('collapsed');
+  }, { passive: true });
+
+  // Swipe down on body when scrolled to top → collapse
+  sheetBody.addEventListener('touchstart', e => {
+    if (sheetBody.scrollTop === 0) touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  sheetBody.addEventListener('touchend', e => {
+    if (sheetBody.scrollTop > 0) return;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (dy > 50) setSheetState('collapsed');
+  }, { passive: true });
+});
+
 // ─── LOAD DATA ───────────────────────────────────────────────────────────────
 let staff = [];
 let rooms = [];
@@ -187,7 +238,6 @@ function updateStatus() {
 function showInfo(zone, person) {
   destZone = zone.id;
   destPerson = person;
-  document.getElementById("info-panel").classList.add("visible");
 
   const emoji = person ? (DEPT_EMOJI[person.dept] || "👤") : "🏫";
   document.getElementById("info-avatar").textContent = emoji;
@@ -223,10 +273,21 @@ function showInfo(zone, person) {
     if (currentPath && currentPath.instructions && currentPath.instructions.length) {
       instrEl.style.display = "";
       instrEl.innerHTML =
-        `<div class="dir-label" style="margin-top:12px">Step-by-step directions</div>
-         <ol style="padding-left:1.3em;margin:6px 0 0;font-size:13px;line-height:1.7;color:#374151">` +
-        currentPath.instructions.map(step => `<li>${step}</li>`).join("") +
-        `</ol>`;
+        `<div class="steps-header">Step-by-step directions</div>
+         <div class="steps-list">` +
+        currentPath.instructions.map((step, i) => {
+          const isArrive = step.startsWith("Arrive at");
+          const isStairs = step.startsWith("Take the stairs");
+          const cls  = isArrive ? "step-item step-arrive"
+                     : isStairs ? "step-item step-stairs"
+                     :             "step-item";
+          const icon = isStairs ? "🪜 " : isArrive ? "📍 " : "";
+          return `<div class="${cls}">
+            <div class="step-num">${i + 1}</div>
+            <div class="step-text">${icon}${step}</div>
+          </div>`;
+        }).join("") +
+        `</div>`;
     } else {
       instrEl.style.display = "none";
       instrEl.innerHTML = "";
@@ -265,7 +326,15 @@ function showInfo(zone, person) {
   updateStatus();
   renderMap();
 
-  setTimeout(() => document.getElementById("info-panel").scrollIntoView({behavior:"smooth",block:"nearest"}), 100);
+  // Populate collapsed-state preview
+  const previewDest = document.getElementById('sheet-preview-dest');
+  const previewStep = document.getElementById('sheet-preview-step');
+  if (previewDest) previewDest.textContent = person ? person.name : zone.label;
+  if (previewStep) {
+    previewStep.textContent = (currentPath && currentPath.instructions && currentPath.instructions[0])
+      || (youZone ? dir.split('.')[0] : 'Set a start location for directions');
+  }
+  setSheetState('collapsed');
 }
 
 // ─── ROOM CLICK ──────────────────────────────────────────────────────────────
@@ -386,7 +455,7 @@ function clearAll() {
   youZone = null; destZone = null; destRoom = null; destRoomFromZone = false; destPerson = null;
   youRoom = null; currentPath = null;
   if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
-  document.getElementById("info-panel").classList.remove("visible");
+  setSheetState('hidden');
   const instrEl = document.getElementById("path-instructions");
   if (instrEl) { instrEl.style.display = "none"; instrEl.innerHTML = ""; }
   const staffListEl = document.getElementById("zone-staff-list");

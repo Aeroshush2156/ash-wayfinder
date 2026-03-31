@@ -46,9 +46,48 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#777;}
 .leg-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
 
-.info-panel{margin:8px;background:#fff;border-radius:14px;border:1px solid #e8e7e1;overflow:hidden;display:none;}
-.info-panel.visible{display:block;}
-.info-header{padding:14px 16px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid #f4f3ef;}
+/* ── Bottom sheet ──────────────────────────────────────────────────────────── */
+.bottom-sheet{
+  position:fixed;bottom:0;left:0;right:0;
+  background:#fff;
+  border-radius:20px 20px 0 0;
+  box-shadow:0 -3px 24px rgba(0,0,0,.13);
+  transform:translateY(100%);
+  transition:transform .36s cubic-bezier(0.32,0.72,0,1);
+  z-index:250;
+  display:flex;flex-direction:column;
+  max-height:88vh;
+}
+.bottom-sheet.sheet-collapsed{transform:translateY(calc(100% - 80px));}
+.bottom-sheet.sheet-expanded {transform:translateY(0);}
+
+/* Handle bar */
+.sheet-handle{
+  padding:10px 16px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  cursor:pointer;flex-shrink:0;
+  border-bottom:1px solid #f0efe9;
+  user-select:none;-webkit-user-select:none;
+}
+.sheet-pill{width:36px;height:4px;background:#d1d0ca;border-radius:2px;flex-shrink:0;}
+.sheet-preview-row{display:flex;align-items:flex-start;gap:10px;width:100%;}
+.sheet-preview{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.sheet-preview-dest{font-size:15px;font-weight:700;color:#111;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sheet-preview-step{font-size:12px;color:#888;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sheet-close-btn{
+  flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;
+  background:#f4f3ef;color:#666;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+  margin-top:1px;
+}
+.sheet-close-btn:hover{background:#e8e7e1;}
+
+/* Scrollable body */
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;}
+
+.info-header{padding:14px 16px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:2px solid #e8e7e1;}
 .info-avatar{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:#eef2ff;}
 .info-name{font-size:16px;font-weight:700;color:#111;line-height:1.2;}
 .info-role{font-size:12px;color:#888;margin-top:3px;line-height:1.4;}
@@ -57,10 +96,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .badge-room{background:#fff0e6;color:#c25600;}
 .badge-floor{background:#f0fff4;color:#15803d;}
 .badge-dept{background:#eef2ff;color:#4f7fff;}
-.info-directions{padding:12px 16px;}
+.info-directions{padding:14px 16px 16px;}
 .dir-label{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
-.dir-text{font-size:13px;color:#333;line-height:1.6;}
+.dir-text{font-size:14px;color:#333;line-height:1.65;}
 .raw-room{font-size:11px;color:#aaa;margin-top:6px;}
+
+/* ── Turn-by-turn step list ────────────────────────────────────────────────── */
+.steps-header{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;
+  letter-spacing:.8px;margin:16px 0 10px;padding-top:14px;border-top:1px solid #e8e7e1;}
+.steps-list{display:flex;flex-direction:column;}
+.step-item{display:flex;align-items:flex-start;gap:11px;padding:10px 0;
+  border-bottom:1px solid #f0efe9;}
+.step-item:last-child{border-bottom:none;}
+.step-num{width:24px;height:24px;border-radius:50%;background:#eef2ff;color:#4f7fff;
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;}
+.step-text{font-size:14px;color:#222;line-height:1.55;flex:1;}
+
+/* Stairwell step */
+.step-stairs{background:#fffbeb;border-radius:9px;padding:10px 11px;margin:4px -2px;}
+.step-stairs .step-num{background:#fef3c7;color:#92400e;}
+.step-stairs .step-text{color:#92400e;font-weight:600;}
+
+/* Arrive step */
+.step-arrive{padding:12px 0 4px;}
+.step-arrive .step-num{background:#dcfce7;color:#15803d;width:26px;height:26px;font-size:12px;}
+.step-arrive .step-text{color:#15803d;font-weight:700;font-size:15px;line-height:1.4;}
 
 .import-bar{margin:0 8px 8px;background:#fff;border-radius:14px;border:1px solid #e8e7e1;padding:10px 14px;display:flex;align-items:center;gap:10px;}
 .import-btn{font-size:12px;font-weight:600;color:#4f7fff;cursor:pointer;background:none;border:1.5px solid #4f7fff;font-family:inherit;padding:6px 13px;border-radius:20px;transition:all .15s;white-space:nowrap;}

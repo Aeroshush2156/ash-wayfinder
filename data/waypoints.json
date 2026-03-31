@@ -609,6 +609,212 @@
       "floor": 0,
       "stairwell": true,
       "stairwellId": "M3"
+    },
+    {
+      "id": "wp_105",
+      "x": 780,
+      "y": 730,
+      "floor": 0
+    },
+    {
+      "id": "wp_106",
+      "x": 840,
+      "y": 730,
+      "floor": 0
+    },
+    {
+      "id": "wp_107",
+      "x": 860,
+      "y": 750,
+      "floor": 0,
+      "stairwell": true,
+      "stairwellId": "MS_2"
+    },
+    {
+      "id": "wp_108",
+      "x": 890,
+      "y": 730,
+      "floor": 0
+    },
+    {
+      "id": "wp_109",
+      "x": 950,
+      "y": 730,
+      "floor": 0
+    },
+    {
+      "id": "wp_110",
+      "x": 1900,
+      "y": 910,
+      "floor": 1
+    },
+    {
+      "id": "wp_111",
+      "x": 1900,
+      "y": 970,
+      "floor": 1
+    },
+    {
+      "id": "wp_112",
+      "x": 1900,
+      "y": 1030,
+      "floor": 1
+    },
+    {
+      "id": "wp_113",
+      "x": 1890,
+      "y": 1060,
+      "floor": 1
+    },
+    {
+      "id": "wp_114",
+      "x": 1950,
+      "y": 1040,
+      "floor": 1
+    },
+    {
+      "id": "wp_115",
+      "x": 1990,
+      "y": 1040,
+      "floor": 1
+    },
+    {
+      "id": "wp_116",
+      "x": 2020,
+      "y": 1040,
+      "floor": 1
+    },
+    {
+      "id": "wp_117",
+      "x": 2070,
+      "y": 1030,
+      "floor": 1
+    },
+    {
+      "id": "wp_118",
+      "x": 1890,
+      "y": 1100,
+      "floor": 1
+    },
+    {
+      "id": "wp_119",
+      "x": 1890,
+      "y": 1250,
+      "floor": 1
+    },
+    {
+      "id": "wp_120",
+      "x": 1890,
+      "y": 1310,
+      "floor": 1
+    },
+    {
+      "id": "wp_121",
+      "x": 1820,
+      "y": 1300,
+      "floor": 1
+    },
+    {
+      "id": "wp_122",
+      "x": 1940,
+      "y": 1310,
+      "floor": 1
+    },
+    {
+      "id": "wp_123",
+      "x": 1970,
+      "y": 1320,
+      "floor": 1
+    },
+    {
+      "id": "wp_124",
+      "x": 2020,
+      "y": 1330,
+      "floor": 1
+    },
+    {
+      "id": "wp_125",
+      "x": 2060,
+      "y": 1330,
+      "floor": 1
+    },
+    {
+      "id": "wp_126",
+      "x": 2100,
+      "y": 1340,
+      "floor": 1
+    },
+    {
+      "id": "wp_127",
+      "x": 1900,
+      "y": 730,
+      "floor": 1
+    },
+    {
+      "id": "wp_128",
+      "x": 1960,
+      "y": 730,
+      "floor": 1
+    },
+    {
+      "id": "wp_129",
+      "x": 2020,
+      "y": 730,
+      "floor": 1
+    },
+    {
+      "id": "wp_130",
+      "x": 2090,
+      "y": 730,
+      "floor": 1
+    },
+    {
+      "id": "wp_131",
+      "x": 1990,
+      "y": 750,
+      "floor": 1,
+      "stairwell": true,
+      "stairwellId": "MS_2"
+    },
+    {
+      "id": "wp_132",
+      "x": 1980,
+      "y": 1060,
+      "floor": 1,
+      "stairwell": true,
+      "stairwellId": "MS_1"
+    },
+    {
+      "id": "wp_133",
+      "x": 1860,
+      "y": 1320,
+      "floor": 1,
+      "stairwell": true,
+      "stairwellId": "ES_1"
+    },
+    {
+      "id": "wp_134",
+      "x": 2080,
+      "y": 1370,
+      "floor": 1,
+      "stairwell": true,
+      "stairwellId": "ES_2"
+    },
+    {
+      "id": "wp_135",
+      "x": 740,
+      "y": 1320,
+      "floor": 0,
+      "stairwell": true,
+      "stairwellId": "ES_1"
+    },
+    {
+      "id": "wp_136",
+      "x": 960,
+      "y": 1370,
+      "floor": 0,
+      "stairwell": true,
+      "stairwellId": "ES_2"
     }
   ],
   "edges": [
@@ -639,10 +845,6 @@
     {
       "from": "wp_021",
       "to": "wp_011"
-    },
-    {
-      "from": "wp_012",
-      "to": "wp_022"
     },
     {
       "from": "wp_022",
@@ -771,10 +973,6 @@
     {
       "from": "wp_049",
       "to": "wp_051"
-    },
-    {
-      "from": "wp_051",
-      "to": "wp_047"
     },
     {
       "from": "wp_051",
@@ -985,6 +1183,114 @@
       "to": "wp_102"
     },
     {
+      "from": "wp_105",
+      "to": "wp_022"
+    },
+    {
+      "from": "wp_105",
+      "to": "wp_012"
+    },
+    {
+      "from": "wp_105",
+      "to": "wp_106"
+    },
+    {
+      "from": "wp_106",
+      "to": "wp_108"
+    },
+    {
+      "from": "wp_108",
+      "to": "wp_109"
+    },
+    {
+      "from": "wp_126",
+      "to": "wp_125"
+    },
+    {
+      "from": "wp_125",
+      "to": "wp_124"
+    },
+    {
+      "from": "wp_124",
+      "to": "wp_123"
+    },
+    {
+      "from": "wp_123",
+      "to": "wp_122"
+    },
+    {
+      "from": "wp_122",
+      "to": "wp_120"
+    },
+    {
+      "from": "wp_120",
+      "to": "wp_119"
+    },
+    {
+      "from": "wp_120",
+      "to": "wp_121"
+    },
+    {
+      "from": "wp_119",
+      "to": "wp_118"
+    },
+    {
+      "from": "wp_118",
+      "to": "wp_113"
+    },
+    {
+      "from": "wp_113",
+      "to": "wp_112"
+    },
+    {
+      "from": "wp_112",
+      "to": "wp_114"
+    },
+    {
+      "from": "wp_114",
+      "to": "wp_115"
+    },
+    {
+      "from": "wp_115",
+      "to": "wp_116"
+    },
+    {
+      "from": "wp_116",
+      "to": "wp_117"
+    },
+    {
+      "from": "wp_112",
+      "to": "wp_111"
+    },
+    {
+      "from": "wp_111",
+      "to": "wp_110"
+    },
+    {
+      "from": "wp_110",
+      "to": "wp_048"
+    },
+    {
+      "from": "wp_127",
+      "to": "wp_051"
+    },
+    {
+      "from": "wp_127",
+      "to": "wp_047"
+    },
+    {
+      "from": "wp_127",
+      "to": "wp_128"
+    },
+    {
+      "from": "wp_128",
+      "to": "wp_129"
+    },
+    {
+      "from": "wp_129",
+      "to": "wp_130"
+    },
+    {
       "from": "wp_070",
       "to": "wp_032",
       "type": "stairwell",
@@ -1025,6 +1331,30 @@
       "to": "wp_030",
       "type": "stairwell",
       "stairwellId": "s_h_south"
+    },
+    {
+      "from": "wp_093",
+      "to": "wp_132",
+      "type": "stairwell",
+      "stairwellId": "MS_1"
+    },
+    {
+      "from": "wp_107",
+      "to": "wp_131",
+      "type": "stairwell",
+      "stairwellId": "MS_2"
+    },
+    {
+      "from": "wp_135",
+      "to": "wp_133",
+      "type": "stairwell",
+      "stairwellId": "ES_1"
+    },
+    {
+      "from": "wp_136",
+      "to": "wp_134",
+      "type": "stairwell",
+      "stairwellId": "ES_2"
     }
   ],
   "roomConnections": [
@@ -1507,6 +1837,316 @@
       "room": "2.03",
       "floor": 1,
       "waypointId": "wp_048"
+    },
+    {
+      "room": "1.33",
+      "floor": 0,
+      "waypointId": "wp_106"
+    },
+    {
+      "room": "1.34",
+      "floor": 0,
+      "waypointId": "wp_108"
+    },
+    {
+      "room": "1.35",
+      "floor": 0,
+      "waypointId": "wp_109"
+    },
+    {
+      "room": "1.36",
+      "floor": 0,
+      "waypointId": "wp_109"
+    },
+    {
+      "room": "1.37",
+      "floor": 0,
+      "waypointId": "wp_109"
+    },
+    {
+      "room": "1.38",
+      "floor": 0,
+      "waypointId": "wp_109"
+    },
+    {
+      "room": "1.39",
+      "floor": 0,
+      "waypointId": "wp_108"
+    },
+    {
+      "room": "1.40",
+      "floor": 0,
+      "waypointId": "wp_106"
+    },
+    {
+      "room": "1.31",
+      "floor": 0,
+      "waypointId": "wp_012"
+    },
+    {
+      "room": "1.30",
+      "floor": 0,
+      "waypointId": "wp_012"
+    },
+    {
+      "room": "1.29",
+      "floor": 0,
+      "waypointId": "wp_073"
+    },
+    {
+      "room": "1.28",
+      "floor": 0,
+      "waypointId": "wp_073"
+    },
+    {
+      "room": "1.27",
+      "floor": 0,
+      "waypointId": "wp_082"
+    },
+    {
+      "room": "1.26",
+      "floor": 0,
+      "waypointId": "wp_083"
+    },
+    {
+      "room": "1.25",
+      "floor": 0,
+      "waypointId": "wp_088"
+    },
+    {
+      "room": "1.19",
+      "floor": 0,
+      "waypointId": "wp_086"
+    },
+    {
+      "room": "1.24",
+      "floor": 0,
+      "waypointId": "wp_091"
+    },
+    {
+      "room": "1.22",
+      "floor": 0,
+      "waypointId": "wp_091"
+    },
+    {
+      "room": "1.21",
+      "floor": 0,
+      "waypointId": "wp_091"
+    },
+    {
+      "room": "1.17",
+      "floor": 0,
+      "waypointId": "wp_098"
+    },
+    {
+      "room": "1.08",
+      "floor": 0,
+      "waypointId": "wp_103"
+    },
+    {
+      "room": "1.16",
+      "floor": 0,
+      "waypointId": "wp_099"
+    },
+    {
+      "room": "1.15",
+      "floor": 0,
+      "waypointId": "wp_100"
+    },
+    {
+      "room": "1.09",
+      "floor": 0,
+      "waypointId": "wp_099"
+    },
+    {
+      "room": "1.10",
+      "floor": 0,
+      "waypointId": "wp_100"
+    },
+    {
+      "room": "1.11",
+      "floor": 0,
+      "waypointId": "wp_101"
+    },
+    {
+      "room": "1.14",
+      "floor": 0,
+      "waypointId": "wp_101"
+    },
+    {
+      "room": "1.13",
+      "floor": 0,
+      "waypointId": "wp_102"
+    },
+    {
+      "room": "1.12",
+      "floor": 0,
+      "waypointId": "wp_102"
+    },
+    {
+      "room": "2.42",
+      "floor": 1,
+      "waypointId": "wp_128"
+    },
+    {
+      "room": "2.41",
+      "floor": 1,
+      "waypointId": "wp_129"
+    },
+    {
+      "room": "2.36",
+      "floor": 1,
+      "waypointId": "wp_128"
+    },
+    {
+      "room": "2.37",
+      "floor": 1,
+      "waypointId": "wp_129"
+    },
+    {
+      "room": "2.38",
+      "floor": 1,
+      "waypointId": "wp_129"
+    },
+    {
+      "room": "2.40",
+      "floor": 1,
+      "waypointId": "wp_130"
+    },
+    {
+      "room": "2.39",
+      "floor": 1,
+      "waypointId": "wp_130"
+    },
+    {
+      "room": "2.32",
+      "floor": 1,
+      "waypointId": "wp_111"
+    },
+    {
+      "room": "2.04",
+      "floor": 1,
+      "waypointId": "wp_112"
+    },
+    {
+      "room": "2.05",
+      "floor": 1,
+      "waypointId": "wp_113"
+    },
+    {
+      "room": "2.23",
+      "floor": 1,
+      "waypointId": "wp_113"
+    },
+    {
+      "room": "2.24",
+      "floor": 1,
+      "waypointId": "wp_114"
+    },
+    {
+      "room": "2.25",
+      "floor": 1,
+      "waypointId": "wp_115"
+    },
+    {
+      "room": "2.29",
+      "floor": 1,
+      "waypointId": "wp_115"
+    },
+    {
+      "room": "2.28",
+      "floor": 1,
+      "waypointId": "wp_116"
+    },
+    {
+      "room": "2.27",
+      "floor": 1,
+      "waypointId": "wp_117"
+    },
+    {
+      "room": "2.26",
+      "floor": 1,
+      "waypointId": "wp_117"
+    },
+    {
+      "room": "2.06",
+      "floor": 1,
+      "waypointId": "wp_121"
+    },
+    {
+      "room": "2.07",
+      "floor": 1,
+      "waypointId": "wp_121"
+    },
+    {
+      "room": "2.08",
+      "floor": 1,
+      "waypointId": "wp_121"
+    },
+    {
+      "room": "2.09",
+      "floor": 1,
+      "waypointId": "wp_121"
+    },
+    {
+      "room": "2.10",
+      "floor": 1,
+      "waypointId": "wp_121"
+    },
+    {
+      "room": "2.12",
+      "floor": 1,
+      "waypointId": "wp_120"
+    },
+    {
+      "room": "2.22",
+      "floor": 1,
+      "waypointId": "wp_122"
+    },
+    {
+      "room": "2.13",
+      "floor": 1,
+      "waypointId": "wp_120"
+    },
+    {
+      "room": "2.14",
+      "floor": 1,
+      "waypointId": "wp_122"
+    },
+    {
+      "room": "2.15",
+      "floor": 1,
+      "waypointId": "wp_123"
+    },
+    {
+      "room": "2.21",
+      "floor": 1,
+      "waypointId": "wp_123"
+    },
+    {
+      "room": "2.20",
+      "floor": 1,
+      "waypointId": "wp_124"
+    },
+    {
+      "room": "2.16",
+      "floor": 1,
+      "waypointId": "wp_124"
+    },
+    {
+      "room": "2.19",
+      "floor": 1,
+      "waypointId": "wp_125"
+    },
+    {
+      "room": "2.17",
+      "floor": 1,
+      "waypointId": "wp_126"
+    },
+    {
+      "room": "2.18",
+      "floor": 1,
+      "waypointId": "wp_126"
     }
   ]
 }

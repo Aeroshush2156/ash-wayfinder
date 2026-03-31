@@ -115,25 +115,39 @@
   </div>
 </div>
 
-<div class="info-panel" id="info-panel">
-  <div class="info-header">
-    <div class="info-avatar" id="info-avatar"></div>
-    <div>
-      <div class="info-name" id="info-name"></div>
-      <div class="info-role" id="info-role"></div>
-      <div class="info-badges">
-        <span class="badge badge-room" id="badge-room"></span>
-        <span class="badge badge-floor" id="badge-floor"></span>
-        <span class="badge badge-dept" id="badge-dept"></span>
+<div class="bottom-sheet" id="bottom-sheet">
+  <!-- Handle bar — always visible in collapsed/expanded states -->
+  <div class="sheet-handle" id="sheet-handle">
+    <div class="sheet-pill"></div>
+    <div class="sheet-preview-row">
+      <div class="sheet-preview">
+        <div class="sheet-preview-dest" id="sheet-preview-dest"></div>
+        <div class="sheet-preview-step" id="sheet-preview-step"></div>
       </div>
+      <button class="sheet-close-btn" id="sheet-close-btn" aria-label="Close">✕</button>
     </div>
   </div>
-  <div class="info-directions">
-    <div class="dir-label">Directions</div>
-    <div class="dir-text" id="dir-text"></div>
-    <div class="raw-room" id="raw-room"></div>
-    <div id="path-instructions" style="display:none"></div>
-    <div id="zone-staff-list" style="display:none"></div>
+  <!-- Scrollable body — full content when expanded -->
+  <div class="sheet-body" id="sheet-body">
+    <div class="info-header">
+      <div class="info-avatar" id="info-avatar"></div>
+      <div>
+        <div class="info-name" id="info-name"></div>
+        <div class="info-role" id="info-role"></div>
+        <div class="info-badges">
+          <span class="badge badge-room" id="badge-room"></span>
+          <span class="badge badge-floor" id="badge-floor"></span>
+          <span class="badge badge-dept" id="badge-dept"></span>
+        </div>
+      </div>
+    </div>
+    <div class="info-directions">
+      <div class="dir-label">Directions</div>
+      <div class="dir-text" id="dir-text"></div>
+      <div class="raw-room" id="raw-room"></div>
+      <div id="path-instructions" style="display:none"></div>
+      <div id="zone-staff-list" style="display:none"></div>
+    </div>
   </div>
 </div>
 
