@@ -164,11 +164,7 @@ function loadAll() {
   } catch (_) {}
 }
 
-// ── Load rooms ────────────────────────────────────────────────────────────────
-fetch('data/rooms.json')
-  .then(r => r.json())
-  .then(data => { rooms = Array.isArray(data) ? data : []; render(); })
-  .catch(() => {});
+// rooms is populated in the init Promise.all below
 
 // ── SVG coordinate helper ─────────────────────────────────────────────────────
 function svgPt(e) {
@@ -585,9 +581,39 @@ function exportData() {
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-loadAll();
-render();
-updateMode();
+// Fetch waypoints.json and rooms.json in parallel.
+// waypoints.json takes priority over localStorage when it has content.
+Promise.all([
+  fetch('data/waypoints.json')
+    .then(r => { if (!r.ok) throw new Error('not found'); return r.json(); })
+    .catch(() => null),
+  fetch('data/rooms.json')
+    .then(r => r.json())
+    .catch(() => null),
+]).then(([wpData, roomData]) => {
+  if (roomData && Array.isArray(roomData)) rooms = roomData;
+
+  if (wpData && Array.isArray(wpData.waypoints) && wpData.waypoints.length) {
+    waypoints       = wpData.waypoints;
+    // Stairwell edges are computed at export time — don't store them in the editor
+    edges           = (wpData.edges || []).filter(e => e.type !== 'stairwell');
+    roomConnections = wpData.roomConnections || [];
+    // Set counter to the highest existing ID so nextId() never collides
+    wpCounter = waypoints.reduce((max, w) => {
+      const n = parseInt(w.id.replace(/\D/g, ''), 10);
+      return isNaN(n) ? max : Math.max(max, n);
+    }, 0);
+    console.log('[editor] loaded from data/waypoints.json —',
+      waypoints.length, 'waypoints,', edges.length, 'edges,',
+      roomConnections.length, 'room connections, wpCounter:', wpCounter);
+  } else {
+    loadAll(); // fall back to localStorage
+    console.log('[editor] data/waypoints.json empty or missing — loaded from localStorage');
+  }
+
+  render();
+  updateMode();
+});
 </script>
 </body>
 </html>

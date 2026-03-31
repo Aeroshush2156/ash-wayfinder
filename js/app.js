@@ -4,7 +4,8 @@ const DEPT_EMOJI = {"Sciences": "⚗️", "Mathematics": "📐", "English": "�
 let currentFloor = 0;
 let youZone   = null;
 let destZone  = null;
-let destRoom  = null;   // specific room rect that takes priority over destZone highlight
+let destRoom  = null;   // resolved room used for pathfinding
+let destRoomFromZone = false; // true when destRoom was resolved from a zone tap (not an explicit room/person)
 let destPerson = null;
 let mapScale  = 1;
 let youRoom   = null;   // { room, floor } — user's precise starting room
@@ -96,7 +97,8 @@ function renderMap() {
       const isYouRoom = youRoom !== null &&
                         r.room === youRoom.room &&
                         r.floor === youRoom.floor;
-      const isTarget  = destRoom !== null &&
+      const isTarget  = !destRoomFromZone &&
+                        destRoom !== null &&
                         typeof destRoom === "object" &&
                         r.room === destRoom.room &&
                         r.floor === destRoom.floor;
@@ -150,7 +152,8 @@ function zoneClick(id) {
     document.getElementById("search").blur();
   } else if (id !== youZone) {
     destZone = id;
-    destRoom = resolveRoomForZone(id);
+    destRoom = resolveDestRoom(id);
+    destRoomFromZone = true;
     destPerson = null;
     currentPath = null;
     if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
@@ -307,28 +310,55 @@ function roomClick(room, floor) {
 }
 
 // Returns the room rect within a zone whose center is closest to the zone center.
+// Falls back to the nearest room on the same floor by Euclidean distance from the
+// zone center if no rooms have their center inside the zone bounding box.
 function resolveRoomForZone(zoneId) {
   const z = zones.find(z => z.id === zoneId);
   if (!z) return null;
   const cx = z.x + z.w / 2, cy = z.y + z.h / 2;
-  const zoneRooms = rooms.filter(r =>
-    r.floor === z.floor &&
+
+  const floorRooms = rooms.filter(r => r.floor === z.floor);
+  const zoneRooms = floorRooms.filter(r =>
     (r.x + r.w / 2) >= z.x && (r.x + r.w / 2) <= z.x + z.w &&
     (r.y + r.h / 2) >= z.y && (r.y + r.h / 2) <= z.y + z.h
   );
-  if (!zoneRooms.length) return null;
+
+  console.log(`[resolveRoomForZone] zone="${zoneId}" bbox=(${z.x},${z.y} → ${z.x+z.w},${z.y+z.h}) floor=${z.floor} — ${floorRooms.length} floor rooms, ${zoneRooms.length} inside bbox`, zoneRooms.map(r => r.room));
+
+  const candidates = zoneRooms.length ? zoneRooms : floorRooms;
+  if (!candidates.length) return null;
+
   let best = null, bestDist = Infinity;
-  zoneRooms.forEach(r => {
+  candidates.forEach(r => {
     const d = Math.hypot(r.x + r.w / 2 - cx, r.y + r.h / 2 - cy);
     if (d < bestDist) { bestDist = d; best = r; }
   });
-  return best ? { room: best.room, floor: best.floor } : null;
+
+  const result = best ? { room: best.room, floor: best.floor } : null;
+  console.log(`[resolveRoomForZone] resolved zone="${zoneId}" → room=${result ? result.room : null} (${zoneRooms.length ? 'in bbox' : 'nearest fallback'}, dist=${bestDist.toFixed(1)})`);
+  return result;
 }
 
 // Returns explicit youRoom, or falls back to the nearest room in youZone.
 function resolveStartRoom() {
-  if (youRoom) return youRoom;
-  return resolveRoomForZone(youZone);
+  if (youRoom) {
+    console.log('[resolveStartRoom] using explicit youRoom:', youRoom.room, 'floor', youRoom.floor);
+    return youRoom;
+  }
+  const resolved = resolveRoomForZone(youZone);
+  console.log('[resolveStartRoom] resolved from zone', youZone, '→', resolved ? resolved.room : null, resolved ? 'floor ' + resolved.floor : '');
+  return resolved;
+}
+
+// Returns the nearest room for a destination zone — nearest within bbox, falling
+// back to nearest on the same floor if the bbox contains no rooms.
+function resolveDestRoom(zoneId) {
+  const z = zones.find(z => z.id === zoneId);
+  console.log('[resolveDestRoom] zoneId:', zoneId, '| zone object:', z);
+  console.log('[resolveDestRoom] rooms array length:', rooms.length, '| rooms:', rooms);
+  const resolved = resolveRoomForZone(zoneId);
+  console.log('[resolveDestRoom] final result:', resolved);
+  return resolved;
 }
 
 function recalculatePath() {
@@ -339,15 +369,21 @@ function recalculatePath() {
     if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
     return;
   }
-  console.log('[app] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', destRoom.room, destRoom.floor);
-  currentPath = Pathfinding.findPath(startRoom.room, startRoom.floor, destRoom.room, destRoom.floor);
+  const startLabel = youRoom
+    ? `Room ${startRoom.room}`
+    : (zones.find(z => z.id === youZone)?.label || `Room ${startRoom.room}`);
+  const destLabel = destRoomFromZone
+    ? (zones.find(z => z.id === destZone)?.label || `Room ${destRoom.room}`)
+    : `Room ${destRoom.room}`;
+  console.log('[app] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', destRoom.room, destRoom.floor, '| labels:', startLabel, '→', destLabel);
+  currentPath = Pathfinding.findPath(startRoom.room, startRoom.floor, destRoom.room, destRoom.floor, startLabel, destLabel);
   console.log('[app] findPath result:', currentPath);
   if (currentPath) Pathfinding.drawPath(currentPath);
   else { Pathfinding.clearPath(); currentPath = null; }
 }
 
 function clearAll() {
-  youZone = null; destZone = null; destRoom = null; destPerson = null;
+  youZone = null; destZone = null; destRoom = null; destRoomFromZone = false; destPerson = null;
   youRoom = null; currentPath = null;
   if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
   document.getElementById("info-panel").classList.remove("visible");

@@ -5,6 +5,9 @@
 let editMode = false;
 let editDrag = null;
 // { zoneId, action:'move'|'resize', handle, startX, startY, origX, origY, origW, origH }
+let editDrawing   = false;   // true while drag-drawing a new zone
+let editDrawStart = null;    // { x, y } SVG coords where draw started
+let editPending   = null;    // { x, y, w, h, floor } awaiting popup
 
 const HANDLE_R = 7; // half-size of resize handles in SVG units (~2.5px at 1x zoom)
 const MIN_DIM  = 20; // minimum zone width/height in SVG units
@@ -122,29 +125,56 @@ function updateZoneDOM(zoneId) {
 // ─── MOUSE EVENTS (attached to svg + document) ───────────────────────────────
 document.getElementById('overlay-svg').addEventListener('mousedown', e => {
   if (!editMode) return;
-  const t = e.target;
+  const t      = e.target;
   const zoneId = t.dataset.zone;
-  if (!zoneId) return;
 
+  if (zoneId) {
+    // Interact with an existing zone (move or resize)
+    e.preventDefault();
+    e.stopPropagation();
+    const z  = zones.find(z => z.id === zoneId);
+    const pt = svgPt(e);
+    editDrag = {
+      zoneId,
+      action:  t.dataset.action,
+      handle:  t.dataset.handle || null,
+      startX:  pt.x,
+      startY:  pt.y,
+      origX:   z.x,  origY: z.y,
+      origW:   z.w,  origH: z.h,
+    };
+    return;
+  }
+
+  // Empty space: start drawing a new zone
   e.preventDefault();
   e.stopPropagation();
-
-  const z  = zones.find(z => z.id === zoneId);
-  const pt = svgPt(e);
-
-  editDrag = {
-    zoneId,
-    action:  t.dataset.action,
-    handle:  t.dataset.handle || null,
-    startX:  pt.x,
-    startY:  pt.y,
-    origX:   z.x,  origY: z.y,
-    origW:   z.w,  origH: z.h,
-  };
+  const pt      = svgPt(e);
+  editDrawing   = true;
+  editDrawStart = { x: pt.x, y: pt.y };
+  const prev = document.getElementById('edit-draw-preview');
+  prev.setAttribute('x', pt.x);
+  prev.setAttribute('y', pt.y);
+  prev.setAttribute('width', 0);
+  prev.setAttribute('height', 0);
+  prev.setAttribute('visibility', 'visible');
 });
 
 document.addEventListener('mousemove', e => {
-  if (!editMode || !editDrag) return;
+  if (!editMode) return;
+
+  if (editDrawing && editDrawStart) {
+    e.preventDefault();
+    const pt = svgPt(e);
+    const prev = document.getElementById('edit-draw-preview');
+    prev.setAttribute('x', Math.min(editDrawStart.x, pt.x));
+    prev.setAttribute('y', Math.min(editDrawStart.y, pt.y));
+    prev.setAttribute('width',  Math.abs(pt.x - editDrawStart.x));
+    prev.setAttribute('height', Math.abs(pt.y - editDrawStart.y));
+    return;
+  }
+
+  if (!editDrag) return;
   e.preventDefault();
 
   const pt = svgPt(e);
@@ -184,7 +214,68 @@ document.addEventListener('mousemove', e => {
   updateZoneDOM(editDrag.zoneId);
 });
 
-document.addEventListener('mouseup', () => { editDrag = null; });
+document.addEventListener('mouseup', e => {
+  if (editDrawing) {
+    editDrawing = false;
+    const prev = document.getElementById('edit-draw-preview');
+    prev.setAttribute('visibility', 'hidden');
+
+    const pt = svgPt(e);
+    const x  = Math.round(Math.min(editDrawStart.x, pt.x));
+    const y  = Math.round(Math.min(editDrawStart.y, pt.y));
+    const w  = Math.round(Math.abs(pt.x - editDrawStart.x));
+    const h  = Math.round(Math.abs(pt.y - editDrawStart.y));
+    editDrawStart = null;
+
+    if (w < 20 || h < 20) return; // too small — ignore stray clicks
+
+    // Auto-detect floor: left half of image = ground (0), right = first (1)
+    const floor   = x < 1170 ? 0 : 1;
+    editPending   = { x, y, w, h, floor };
+    openNewZonePopup();
+    return;
+  }
+
+  editDrag = null;
+});
+
+// ─── NEW ZONE POPUP ───────────────────────────────────────────────────────────
+function openNewZonePopup() {
+  const { x, y, w, h, floor } = editPending;
+  document.getElementById('zone-input-label').value = '';
+  document.getElementById('zone-input-type').value  = 'class';
+  document.getElementById('zone-create-coords').textContent =
+    `x: ${x}  ·  y: ${y}  ·  ${w} × ${h}  ·  ${floor === 0 ? 'Ground' : 'First'} Floor`;
+  document.getElementById('zone-create-overlay').classList.add('open');
+  requestAnimationFrame(() => document.getElementById('zone-input-label').focus());
+}
+
+function closeNewZonePopup() {
+  document.getElementById('zone-create-overlay').classList.remove('open');
+  editPending = null;
+}
+
+function saveNewZone() {
+  const label = document.getElementById('zone-input-label').value.trim();
+  if (!label) { document.getElementById('zone-input-label').focus(); return; }
+  const type  = document.getElementById('zone-input-type').value;
+  const { x, y, w, h, floor } = editPending;
+
+  // Generate a unique id from the label (slug)
+  let baseId = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  let id = baseId, n = 2;
+  while (zones.some(z => z.id === id)) { id = baseId + '_' + n++; }
+
+  zones.push({ id, floor, label, type, x, y, w, h });
+  closeNewZonePopup();
+  renderEditMap();
+}
+
+// Keyboard shortcuts for the zone creation popup
+document.getElementById('zone-input-label').addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); saveNewZone(); }
+  if (e.key === 'Escape') closeNewZonePopup();
+});
 
 // ─── EXPORT ──────────────────────────────────────────────────────────────────
 function exportZones() {

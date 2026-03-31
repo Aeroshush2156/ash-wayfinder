@@ -150,14 +150,14 @@ const Pathfinding = (() => {
   }
 
   // ── Instruction generation ─────────────────────────────────────────────────
-  function _buildInstructions(path, startRoom, destRoom) {
-    if (path.length < 2) return [`Proceed directly to Room ${destRoom}`];
+  function _buildInstructions(path, startLabel, destLabel) {
+    if (path.length < 2) return [`Proceed directly to ${destLabel}`];
 
     const steps = [];
 
     // First instruction: exit start room, initial heading
     const initialH = _heading(path[0], path[1]);
-    steps.push(`Exit Room ${startRoom} and head ${_cardinalDir(initialH)}`);
+    steps.push(`Exit ${startLabel} and head ${_cardinalDir(initialH)}`);
 
     let prevH       = initialH;
     let pendingStraight = false;
@@ -211,7 +211,7 @@ const Pathfinding = (() => {
     if (pendingStraight) steps.push('Continue straight');
 
     // Last instruction
-    steps.push(`Arrive at Room ${destRoom}`);
+    steps.push(`Arrive at ${destLabel}`);
     return steps;
   }
 
@@ -354,7 +354,7 @@ const Pathfinding = (() => {
    *   }
    * or null if no path exists or data is not yet loaded.
    */
-  function findPath(startRoom, startFloor, destRoom, destFloor) {
+  function findPath(startRoom, startFloor, destRoom, destFloor, startLabel, destLabel) {
     if (!_loaded) {
       console.warn('[pathfinding] data not yet loaded — await Pathfinding.ready first');
       return null;
@@ -381,10 +381,13 @@ const Pathfinding = (() => {
     console.log('[pathfinding] graph neighbours for start:', _graph[startConn.waypointId]);
     console.log('[pathfinding] graph neighbours for dest:', _graph[destConn.waypointId]);
 
+    const sLabel = startLabel || `Room ${startRoom}`;
+    const dLabel = destLabel  || `Room ${destRoom}`;
+
     if (startConn.waypointId === destConn.waypointId) {
       return {
         waypoints:    [_wpMap[startConn.waypointId]],
-        instructions: [`Room ${destRoom} is right here`],
+        instructions: [`${dLabel} is right here`],
         floors:       [startFloor],
       };
     }
@@ -398,7 +401,7 @@ const Pathfinding = (() => {
     }
 
     const floors       = [...new Set(path.map(w => w.floor))];
-    const instructions = _buildInstructions(path, startRoom, destRoom);
+    const instructions = _buildInstructions(path, sLabel, dLabel);
 
     return { waypoints: path, instructions, floors };
   }

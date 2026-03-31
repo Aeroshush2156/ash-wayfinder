@@ -3,8 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-<title>Staff Finder — Lincoln High</title>
+<title>ASH Wayfinder</title>
 <link rel="stylesheet" href="css/styles.css">
+<style>
+/* ── Zone creation popup (edit mode only) ─────────────────────────────────── */
+.zone-create-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.52); backdrop-filter: blur(3px);
+  z-index: 600; align-items: center; justify-content: center;
+}
+.zone-create-overlay.open { display: flex; }
+.zone-create-popup {
+  background: #fff; border-radius: 14px; padding: 20px 20px 16px;
+  width: 284px; box-shadow: 0 20px 60px rgba(0,0,0,.45);
+  animation: zcPopIn .13s ease-out;
+}
+@keyframes zcPopIn {
+  from { opacity: 0; transform: scale(.93) translateY(5px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+.zone-create-popup h3 { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 14px; }
+.zc-field { margin-bottom: 12px; }
+.zc-field label {
+  display: block; font-size: 10px; font-weight: 700; color: #aaa;
+  text-transform: uppercase; letter-spacing: .7px; margin-bottom: 4px;
+}
+.zc-field input, .zc-field select {
+  width: 100%; height: 38px; border: 1.5px solid #e0dfd9; border-radius: 8px;
+  padding: 0 10px; font-size: 14px; font-family: inherit; color: #111; outline: none;
+  transition: border-color .15s;
+}
+.zc-field input:focus, .zc-field select:focus { border-color: #4f7fff; }
+.zc-coords { font-size: 11px; color: #bbb; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+.zc-actions { display: flex; gap: 8px; }
+.zc-actions button {
+  flex: 1; height: 36px; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.zc-actions .zc-cancel { background: #f4f3ef; color: #555; }
+.zc-actions .zc-cancel:hover { background: #e8e7e1; }
+.zc-actions .zc-save   { background: #4f7fff; color: #fff; }
+.zc-actions .zc-save:hover   { background: #3a6fef; }
+</style>
 </head>
 <body>
 
@@ -44,7 +84,7 @@
 <div class="map-wrap" id="map-wrap">
   <div class="edit-banner" id="edit-banner">
     <span class="edit-banner-label">✏️ EDIT MODE</span>
-    <span class="edit-banner-hint">Drag to move · Corner/edge handles to resize · Press E to exit</span>
+    <span class="edit-banner-hint">Drag zone to move · Handles to resize · Drag empty area to create · Press E to exit</span>
     <button class="export-zones-btn" id="export-zones-btn" onclick="exportZones()">📋 Export Zones</button>
   </div>
   <div class="map-scroll" id="map-scroll">
@@ -62,6 +102,10 @@
              preserveAspectRatio="xMidYMid meet"/>
       <g id="zones-layer"></g>
       <g id="rooms-layer"></g>
+      <rect id="edit-draw-preview" x="0" y="0" width="0" height="0"
+            fill="rgba(245,158,11,.12)" stroke="#f59e0b" stroke-width="2.5"
+            stroke-dasharray="10 5" rx="7"
+            visibility="hidden" pointer-events="none"/>
     </svg>
   </div>
   <div class="zoom-row">
@@ -98,6 +142,29 @@
   <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSV(this)">
   <span class="import-label">name, room, floor, department, zone</span>
   <span class="staff-count" id="staff-count"></span>
+</div>
+
+<div class="zone-create-overlay" id="zone-create-overlay">
+  <div class="zone-create-popup">
+    <h3>New Zone</h3>
+    <div class="zc-field">
+      <label>Label</label>
+      <input type="text" id="zone-input-label" placeholder="e.g. Science Block"
+             autocomplete="off" spellcheck="false">
+    </div>
+    <div class="zc-field">
+      <label>Type</label>
+      <select id="zone-input-type">
+        <option value="class">Class (green)</option>
+        <option value="special">Special (yellow)</option>
+      </select>
+    </div>
+    <div class="zc-coords" id="zone-create-coords"></div>
+    <div class="zc-actions">
+      <button class="zc-cancel" onclick="closeNewZonePopup()">Cancel</button>
+      <button class="zc-save"   onclick="saveNewZone()">Add Zone</button>
+    </div>
+  </div>
 </div>
 
 <script src="js/zones.js"></script>

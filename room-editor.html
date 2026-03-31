@@ -175,7 +175,7 @@ body {
 
 <script>
 // ─── STATE ───────────────────────────────────────────────────────────────────
-let rooms   = JSON.parse(localStorage.getItem('rooms') || '[]');
+let rooms   = [];
 let zoom    = 1;
 let drawing = false;
 let startPt = null;       // SVG coords where drag started
@@ -422,7 +422,23 @@ function clearAll() {
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
-render();
+// Prefer data/rooms.json; fall back to localStorage if missing or empty.
+fetch('data/rooms.json')
+  .then(r => { if (!r.ok) throw new Error('not found'); return r.json(); })
+  .then(data => {
+    if (Array.isArray(data) && data.length) {
+      // rooms.json has no internal id field — assign one so click-to-edit works
+      rooms = data.map((r, i) => ({ id: i + 1, ...r }));
+      console.log('[room-editor] loaded', rooms.length, 'rooms from data/rooms.json');
+    } else {
+      throw new Error('empty');
+    }
+  })
+  .catch(() => {
+    try { rooms = JSON.parse(localStorage.getItem('rooms') || '[]'); } catch (_) {}
+    console.log('[room-editor] loaded', rooms.length, 'rooms from localStorage');
+  })
+  .finally(() => render());
 </script>
 </body>
 </html>

@@ -37,14 +37,19 @@ function selectPerson(name) {
   document.getElementById("search").value = s.name;
   document.getElementById("search-clear").style.display = "block";
 
-  // Prefer a specific room rectangle; fall back to zone highlight
+  // Explicit person/room selection — mark destRoom as non-zone so the room rect is highlighted
   destRoom = rooms.find(r => r.room === s.room && r.floor === s.floor) || null;
+  destRoomFromZone = false;
 
   // Calculate and draw the waypoint path if a starting location is known
   const startRoom = (typeof resolveStartRoom === "function") ? resolveStartRoom() : youRoom;
   if (startRoom && typeof Pathfinding !== "undefined") {
-    console.log('[search] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', s.room, s.floor);
-    currentPath = Pathfinding.findPath(startRoom.room, startRoom.floor, s.room, s.floor);
+    const startLabel = youRoom
+      ? `Room ${startRoom.room}`
+      : (zones.find(z => z.id === youZone)?.label || `Room ${startRoom.room}`);
+    const destLabel = `Room ${s.room}`;
+    console.log('[search] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', s.room, s.floor, '| labels:', startLabel, '→', destLabel);
+    currentPath = Pathfinding.findPath(startRoom.room, startRoom.floor, s.room, s.floor, startLabel, destLabel);
     console.log('[search] findPath result:', currentPath);
     currentPath ? Pathfinding.drawPath(currentPath) : Pathfinding.clearPath();
   } else {
