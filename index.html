@@ -9,41 +9,41 @@
 /* ── Zone creation popup (edit mode only) ─────────────────────────────────── */
 .zone-create-overlay {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,.52); backdrop-filter: blur(3px);
+  background: rgba(0,0,0,.65); backdrop-filter: blur(3px);
   z-index: 600; align-items: center; justify-content: center;
 }
 .zone-create-overlay.open { display: flex; }
 .zone-create-popup {
-  background: #fff; border-radius: 14px; padding: 20px 20px 16px;
-  width: 284px; box-shadow: 0 20px 60px rgba(0,0,0,.45);
-  animation: zcPopIn .13s ease-out;
+  background: var(--bg-elevated); border-radius: 14px; padding: 20px 20px 16px;
+  width: 284px; box-shadow: 0 20px 60px rgba(0,0,0,.65);
+  animation: zcPopIn .13s ease-out; border: 1px solid var(--border);
 }
 @keyframes zcPopIn {
   from { opacity: 0; transform: scale(.93) translateY(5px); }
   to   { opacity: 1; transform: scale(1)   translateY(0); }
 }
-.zone-create-popup h3 { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 14px; }
+.zone-create-popup h3 { font-size: 14px; font-weight: 700; color: var(--text-1); margin-bottom: 14px; }
 .zc-field { margin-bottom: 12px; }
 .zc-field label {
-  display: block; font-size: 10px; font-weight: 700; color: #aaa;
+  display: block; font-size: 10px; font-weight: 700; color: var(--text-3);
   text-transform: uppercase; letter-spacing: .7px; margin-bottom: 4px;
 }
 .zc-field input, .zc-field select {
-  width: 100%; height: 38px; border: 1.5px solid #e0dfd9; border-radius: 8px;
-  padding: 0 10px; font-size: 14px; font-family: inherit; color: #111; outline: none;
-  transition: border-color .15s;
+  width: 100%; height: 38px; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 0 10px; font-size: 14px; font-family: inherit; color: var(--text-1);
+  background: var(--bg-input); outline: none; transition: border-color .15s;
 }
-.zc-field input:focus, .zc-field select:focus { border-color: #4f7fff; }
-.zc-coords { font-size: 11px; color: #bbb; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+.zc-field input:focus, .zc-field select:focus { border-color: var(--accent); }
+.zc-coords { font-size: 11px; color: var(--text-3); margin-bottom: 12px; font-variant-numeric: tabular-nums; }
 .zc-actions { display: flex; gap: 8px; }
 .zc-actions button {
   flex: 1; height: 36px; border: none; border-radius: 8px;
   font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
 }
-.zc-actions .zc-cancel { background: #f4f3ef; color: #555; }
-.zc-actions .zc-cancel:hover { background: #e8e7e1; }
-.zc-actions .zc-save   { background: #4f7fff; color: #fff; }
-.zc-actions .zc-save:hover   { background: #3a6fef; }
+.zc-actions .zc-cancel { background: var(--bg-hover); color: var(--text-2); }
+.zc-actions .zc-cancel:hover { background: var(--border); }
+.zc-actions .zc-save   { background: var(--accent); color: #fff; }
+.zc-actions .zc-save:hover   { background: var(--accent-hi); }
 </style>
 </head>
 <body>
@@ -53,13 +53,32 @@
   <div class="app-title">Staff Finder
     <span class="app-sub">2025–2026 · High School</span>
   </div>
-  <div class="floor-btns">
-    <button class="floor-btn active" onclick="switchFloor(0)" id="fb0">Ground</button>
-    <button class="floor-btn" onclick="switchFloor(1)" id="fb1">First</button>
+</div>
+
+<div class="howto-banner" id="howto-banner">
+  <button class="howto-header" onclick="toggleHowTo()" aria-label="How to use — tap to expand or collapse">
+    <span class="howto-label">How to use</span>
+    <span class="howto-progress" id="howto-progress">0/3 done</span>
+    <span class="howto-chevron">▾</span>
+  </button>
+  <div class="howto-steps">
+    <div class="howto-step active" id="hs1" onclick="step1Tap()" role="button" tabindex="0" aria-label="Step 1 — tap to open search">
+      <div class="hs-num" id="hn1">1</div>
+      <div class="hs-text">Search for a teacher, room, or department</div>
+      <span class="hs-tap-hint" aria-hidden="true">🔍</span>
+    </div>
+    <div class="howto-step" id="hs2">
+      <div class="hs-num" id="hn2">2</div>
+      <div class="hs-text">Tap your current location on the map</div>
+    </div>
+    <div class="howto-step" id="hs3">
+      <div class="hs-num" id="hn3">3</div>
+      <div class="hs-text">Follow the directions</div>
+    </div>
   </div>
 </div>
 
-<div class="search-section">
+<div class="search-section" id="search-section">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input class="search-input" id="search" type="text" placeholder="Search by name, room, or department…" autocomplete="off" oninput="onSearch(this.value)" onfocus="onSearch(this.value)">
@@ -75,21 +94,30 @@
 </div>
 
 <div class="legend">
-  <div class="leg"><div class="leg-dot" style="background:#c7d9ff;border:1.5px solid #4f7fff"></div>You are here</div>
-  <div class="leg"><div class="leg-dot" style="background:#ffc7c7;border:1.5px solid #dc2626"></div>Destination</div>
-  <div class="leg"><div class="leg-dot" style="background:#d1fae5;border:1.5px solid #16a34a"></div>Department zone</div>
-  <div class="leg"><div class="leg-dot" style="background:#fef9c3;border:1.5px solid #ca8a04"></div>Special area</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--accent-bg);border:1.5px solid var(--accent)"></div>You are here</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--red-bg);border:1.5px solid var(--red)"></div>Destination</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--green-bg);border:1.5px solid var(--green-hi)"></div>Department zone</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--amber-bg);border:1.5px solid var(--amber-hi)"></div>Special area</div>
 </div>
 
 <div class="map-wrap" id="map-wrap">
+  <div class="floor-tabs" id="floor-tabs">
+    <button class="floor-tab active" id="ft0" onclick="switchFloor(0)">
+      Ground Floor<span class="floor-tab-dot"></span>
+    </button>
+    <button class="floor-tab" id="ft1" onclick="switchFloor(1)">
+      First Floor<span class="floor-tab-dot"></span>
+    </button>
+  </div>
   <div class="edit-banner" id="edit-banner">
     <span class="edit-banner-label">✏️ EDIT MODE</span>
     <span class="edit-banner-hint">Drag zone to move · Handles to resize · Drag empty area to create · Press E to exit</span>
     <button class="export-zones-btn" id="export-zones-btn" onclick="exportZones()">📋 Export Zones</button>
   </div>
   <div class="map-scroll" id="map-scroll">
+    <div id="map-transform">
     <svg class="overlay-svg" id="overlay-svg"
-         viewBox="0 0 2339 1654"
+         viewBox="0 0 1170 1654"
          preserveAspectRatio="xMidYMid meet">
       <defs>
         <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5"
@@ -107,12 +135,14 @@
             stroke-dasharray="10 5" rx="7"
             visibility="hidden" pointer-events="none"/>
     </svg>
+    </div>
   </div>
   <div class="zoom-row">
     <button class="zoom-btn" onclick="zoomIn()">+</button>
     <button class="zoom-btn" onclick="zoomOut()">−</button>
     <button class="zoom-btn" onclick="resetZoom()" style="font-size:13px">⊙</button>
   </div>
+  <div class="stair-banner" id="stair-banner"></div>
 </div>
 
 <div class="bottom-sheet" id="bottom-sheet">

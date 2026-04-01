@@ -149,6 +149,33 @@ const Pathfinding = (() => {
     return null; // no path found
   }
 
+  // Like _aStar but also returns the closed set on failure (for diagnostics).
+  function _aStarDebug(startId, endId) {
+    if (!_wpMap[startId] || !_wpMap[endId]) return { path: null, visited: [] };
+    const end = _wpMap[endId];
+    const g = {}, f = {}, parent = {};
+    _waypoints.forEach(w => { g[w.id] = Infinity; f[w.id] = Infinity; });
+    g[startId] = 0;
+    f[startId] = _euclidean(_wpMap[startId], end);
+    const open = new Set([startId]), closed = new Set();
+    while (open.size) {
+      let current = null, best = Infinity;
+      for (const id of open) { if (f[id] < best) { best = f[id]; current = id; } }
+      if (current === endId) {
+        const path = []; let c = endId;
+        while (c !== undefined) { path.unshift(_wpMap[c]); c = parent[c]; }
+        return { path, visited: [...closed] };
+      }
+      open.delete(current); closed.add(current);
+      for (const { to, cost } of (_graph[current] || [])) {
+        if (closed.has(to)) continue;
+        const tg = g[current] + cost;
+        if (tg < g[to]) { parent[to] = current; g[to] = tg; f[to] = tg + _euclidean(_wpMap[to], end); open.add(to); }
+      }
+    }
+    return { path: null, visited: [...closed] };
+  }
+
   // ── Instruction generation ─────────────────────────────────────────────────
   function _buildInstructions(path, startLabel, destLabel) {
     if (path.length < 2) return [`Proceed directly to ${destLabel}`];
@@ -217,31 +244,13 @@ const Pathfinding = (() => {
 
   // ── SVG path drawing ───────────────────────────────────────────────────────
 
-  // Ensure the arrowhead marker and keyframe animation are available in the SVG.
-  function _ensureMarker(svg) {
-    if (svg.querySelector('#pf-ah')) return; // already exists
-
-    // Add marker to <defs> (create <defs> if missing)
-    let defs = svg.querySelector('defs');
-    if (!defs) {
-      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-      svg.insertBefore(defs, svg.firstChild);
-    }
-    defs.insertAdjacentHTML('beforeend',
-      `<marker id="pf-ah" viewBox="0 0 10 10" refX="9" refY="5"
-               markerWidth="5" markerHeight="5" orient="auto">
-         <path d="M1 1L9 5L1 9" fill="none" stroke="#2563eb"
-               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-       </marker>`
-    );
-
-    // Inject the dashMove animation once if styles.css hasn't already
-    if (!document.querySelector('style[data-pf-anim]')) {
-      const style = document.createElement('style');
-      style.setAttribute('data-pf-anim', '1');
-      style.textContent = `@keyframes pfDash { to { stroke-dashoffset: -22; } }`;
-      document.head.appendChild(style);
-    }
+  // Ensure the keyframe animation is injected once.
+  function _ensureMarker() {
+    if (document.querySelector('style[data-pf-anim]')) return;
+    const style = document.createElement('style');
+    style.setAttribute('data-pf-anim', '1');
+    style.textContent = `@keyframes pfDash { to { stroke-dashoffset: -38; } }`;
+    document.head.appendChild(style);
   }
 
   // Get or create the path-layer group, positioned just above the rooms layer.
@@ -270,15 +279,10 @@ const Pathfinding = (() => {
       const a = path[i], b = path[i + 1];
       if (a.floor !== floor || b.floor !== floor) continue;
 
-      // Last segment of a continuous run on this floor gets the arrowhead
-      const isLast = (i === path.length - 2) ||
-                     (path[i + 2] && path[i + 2].floor !== floor);
-      const marker = isLast ? 'marker-end="url(#pf-ah)"' : '';
-
       html += `<line
         x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"
-        stroke="#2563eb" stroke-width="3" stroke-linecap="round"
-        stroke-dasharray="12 7" ${marker} opacity="0.85"
+        stroke="#1246c8" stroke-width="6" stroke-linecap="round"
+        stroke-dasharray="22 16" opacity="0.92"
         style="animation:pfDash 0.9s linear infinite"/>`;
     }
     return html;
@@ -295,7 +299,7 @@ const Pathfinding = (() => {
     _currentPath = pathResult;
     const svg = document.getElementById('overlay-svg');
     if (!svg) return;
-    _ensureMarker(svg);
+    _ensureMarker();
 
     const layer = _getPathLayer(svg);
 
@@ -406,6 +410,10 @@ const Pathfinding = (() => {
     return { waypoints: path, instructions, floors };
   }
 
-  return { findPath, drawPath, clearPath, setFloor, ready };
+  function debugData() {
+    return { roomConnections: _roomConnections, wpMap: _wpMap, aStarDebug: _aStarDebug };
+  }
+
+  return { findPath, drawPath, clearPath, setFloor, ready, debugData };
 
 })();

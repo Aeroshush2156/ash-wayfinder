@@ -40,20 +40,23 @@ function selectPerson(name) {
   // Explicit person/room selection — mark destRoom as non-zone so the room rect is highlighted
   destRoom = rooms.find(r => r.room === s.room && r.floor === s.floor) || null;
   destRoomFromZone = false;
+  console.log('[selectPerson] destRoom after set:', destRoom);
 
   // Calculate and draw the waypoint path if a starting location is known
   const startRoom = (typeof resolveStartRoom === "function") ? resolveStartRoom() : youRoom;
+  console.log('[selectPerson] resolveStartRoom() returned:', startRoom);
+  console.log('[selectPerson] recalculatePath() will NOT be called — Pathfinding.findPath() invoked directly below');
   if (startRoom && typeof Pathfinding !== "undefined") {
     const startLabel = youRoom
       ? `Room ${startRoom.room}`
       : (zones.find(z => z.id === youZone)?.label || `Room ${startRoom.room}`);
     const destLabel = `Room ${s.room}`;
-    console.log('[search] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', s.room, s.floor, '| labels:', startLabel, '→', destLabel);
+    console.log('[selectPerson] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', s.room, s.floor, '| labels:', startLabel, '→', destLabel);
     currentPath = Pathfinding.findPath(startRoom.room, startRoom.floor, s.room, s.floor, startLabel, destLabel);
-    console.log('[search] findPath result:', currentPath);
+    console.log('[selectPerson] Pathfinding.findPath() result:', currentPath);
     currentPath ? Pathfinding.drawPath(currentPath) : Pathfinding.clearPath();
   } else {
-    console.log('[search] findPath skipped — startRoom:', startRoom, 'Pathfinding defined:', typeof Pathfinding !== "undefined");
+    console.log('[selectPerson] findPath SKIPPED — startRoom:', startRoom, '| Pathfinding defined:', typeof Pathfinding !== "undefined");
     currentPath = null;
     if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
   }
