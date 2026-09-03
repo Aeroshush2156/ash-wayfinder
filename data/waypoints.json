@@ -325,12 +325,6 @@
       "floor": 1
     },
     {
-      "id": "wp_060",
-      "x": 1740,
-      "y": 610,
-      "floor": 1
-    },
-    {
       "id": "wp_061",
       "x": 1720,
       "y": 610,
@@ -815,6 +809,22 @@
       "floor": 0,
       "stairwell": true,
       "stairwellId": "ES_2"
+    },
+    {
+      "id": "wp_138",
+      "x": 1740,
+      "y": 610,
+      "floor": 1,
+      "stairwell": true,
+      "stairwellId": "math"
+    },
+    {
+      "id": "wp_139",
+      "x": 630,
+      "y": 610,
+      "floor": 0,
+      "stairwell": true,
+      "stairwellId": "math"
     }
   ],
   "edges": [
@@ -825,10 +835,6 @@
     {
       "from": "wp_011",
       "to": "wp_012"
-    },
-    {
-      "from": "wp_013",
-      "to": "wp_014"
     },
     {
       "from": "wp_002",
@@ -977,10 +983,6 @@
     {
       "from": "wp_051",
       "to": "wp_052"
-    },
-    {
-      "from": "wp_060",
-      "to": "wp_061"
     },
     {
       "from": "wp_061",
@@ -1291,6 +1293,18 @@
       "to": "wp_130"
     },
     {
+      "from": "wp_061",
+      "to": "wp_138"
+    },
+    {
+      "from": "wp_014",
+      "to": "wp_139"
+    },
+    {
+      "from": "wp_139",
+      "to": "wp_013"
+    },
+    {
       "from": "wp_070",
       "to": "wp_032",
       "type": "stairwell",
@@ -1355,6 +1369,12 @@
       "to": "wp_134",
       "type": "stairwell",
       "stairwellId": "ES_2"
+    },
+    {
+      "from": "wp_139",
+      "to": "wp_138",
+      "type": "stairwell",
+      "stairwellId": "math"
     }
   ],
   "roomConnections": [
@@ -2147,6 +2167,16 @@
       "room": "2.18",
       "floor": 1,
       "waypointId": "wp_126"
+    },
+    {
+      "room": "1.32",
+      "floor": 0,
+      "waypointId": "wp_012"
+    },
+    {
+      "room": "2.33",
+      "floor": 1,
+      "waypointId": "wp_110"
     }
   ]
 }

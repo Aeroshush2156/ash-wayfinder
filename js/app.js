@@ -469,8 +469,14 @@ function showInfo(zone, person) {
   const previewStep = document.getElementById('sheet-preview-step');
   if (previewDest) previewDest.textContent = person ? person.name : zone.label;
   if (previewStep) {
-    previewStep.textContent = (currentPath && currentPath.instructions && currentPath.instructions[0])
-      || (youZone ? dir.split('.')[0] : 'Set a start location for directions');
+    // Once a route is drawn, don't show the raw first instruction step here —
+    // it read as plain info text and people didn't realize tapping it opens
+    // the full turn-by-turn list. Show an explicit call-to-action instead.
+    const hasRoute = currentPath && currentPath.instructions && currentPath.instructions.length;
+    previewStep.textContent = hasRoute
+      ? 'Tap to view turn-by-turn directions ›'
+      : (youZone ? dir.split('.')[0] : 'Set a start location for directions');
+    previewStep.classList.toggle('sheet-preview-step-cta', !!hasRoute);
   }
   setSheetState('collapsed');
 }
@@ -780,6 +786,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, { passive: true });
 });
+
+// ─── ADMIN GATE FOR CSV IMPORT ─────────────────────────────────────────────
+// requireAdmin() lives in js/admin-auth.js. This just fronts the file picker
+// with a password prompt so casual visitors don't stumble into importing data.
+async function handleImportClick() {
+  const ok = await requireAdmin("Enter admin password to import staff CSV:");
+  if (ok) document.getElementById("csv-input").click();
+}
 
 // ─── CSV IMPORT ──────────────────────────────────────────────────────────────
 function handleCSV(input) {

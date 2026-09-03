@@ -117,6 +117,19 @@ body {
 </head>
 <body>
 
+<div class="overlay open" id="admin-gate-overlay">
+  <div class="popup">
+    <div class="popup-title">Room Editor — Admin Login</div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="admin-gate-input" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="popup-actions">
+      <button class="btn btn-save" style="flex:1" onclick="submitAdminGate()">Unlock</button>
+    </div>
+  </div>
+</div>
+
 <div class="toolbar">
   <div>
     <div class="toolbar-title">Room Editor</div>
@@ -130,6 +143,8 @@ body {
     <button class="zoom-btn" onclick="zoomIn()" title="Zoom in">+</button>
   </div>
   <button class="btn btn-ghost" onclick="clearAll()">Clear All</button>
+  <button class="btn btn-blue" onclick="handleRoomsImportClick()">📋 Import CSV</button>
+  <input type="file" id="rooms-csv-input" accept=".csv" style="display:none" onchange="handleRoomsCSV(this)">
   <button class="btn btn-blue" id="export-btn" onclick="exportRooms()">📋 Export JSON</button>
 </div>
 
@@ -173,9 +188,11 @@ body {
   </div>
 </div>
 
+<script src="js/admin-auth.js"></script>
 <script>
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let rooms   = [];
+let dragRoom = null; // { id, startX, startY, origX, origY, moved } — drag-to-move for existing rooms
 let zoom    = 1;
 let drawing = false;
 let startPt = null;       // SVG coords where drag started
@@ -192,13 +209,76 @@ function svgPt(e) {
   return p.matrixTransform(svg.getScreenCTM().inverse());
 }
 
+// ─── ADMIN GATE ──────────────────────────────────────────────────────────────
+(function initAdminGate() {
+  const gate = document.getElementById('admin-gate-overlay');
+  if (isAdminUnlocked()) { gate.classList.remove('open'); return; }
+  document.getElementById('admin-gate-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAdminGate();
+  });
+  requestAnimationFrame(() => document.getElementById('admin-gate-input').focus());
+})();
+
+async function submitAdminGate() {
+  const input = document.getElementById('admin-gate-input');
+  const ok = await tryAdminUnlock(input.value);
+  if (ok) {
+    document.getElementById('admin-gate-overlay').classList.remove('open');
+  } else {
+    alert('Incorrect password.');
+    input.value = '';
+    input.focus();
+  }
+}
+
 // ─── DRAW ────────────────────────────────────────────────────────────────────
 const svgEl   = document.getElementById('editor-svg');
 const preview = document.getElementById('draw-preview');
 
+// Drag an existing room to reposition it (click without moving still opens
+// the edit popup via the <g> element's onclick).
 svgEl.addEventListener('mousedown', e => {
   if (e.button !== 0) return;
-  if (e.target.closest('[data-rid]')) return; // let click-to-edit handle this
+  const g = e.target.closest('[data-rid]');
+  if (!g) return;
+  if (document.getElementById('overlay').classList.contains('open')) return;
+  const id = Number(g.dataset.rid);
+  const r  = rooms.find(r => r.id === id);
+  if (!r) return;
+  const pt = svgPt(e);
+  dragRoom = { id, startX: pt.x, startY: pt.y, origX: r.x, origY: r.y, moved: false };
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragRoom) return;
+  const pt = svgPt(e);
+  const dx = pt.x - dragRoom.startX;
+  const dy = pt.y - dragRoom.startY;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragRoom.moved = true;
+  if (!dragRoom.moved) return;
+  const r = rooms.find(r => r.id === dragRoom.id);
+  if (!r) return;
+  r.x = Math.round(dragRoom.origX + dx);
+  r.y = Math.round(dragRoom.origY + dy);
+  render();
+});
+
+document.addEventListener('mouseup', () => {
+  if (!dragRoom) return;
+  if (dragRoom.moved) {
+    const r = rooms.find(r => r.id === dragRoom.id);
+    if (r) delete r.needsPlacement;
+    persist();
+    render();
+    suppressNextClick = true;
+    setTimeout(() => { suppressNextClick = false; }, 200);
+  }
+  dragRoom = null;
+});
+
+svgEl.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  if (e.target.closest('[data-rid]')) return; // let click-to-edit / drag handle this
   if (document.getElementById('overlay').classList.contains('open')) return;
   e.preventDefault();
   drawing = true;
@@ -295,7 +375,7 @@ function saveRoom() {
 
   if (editId !== null) {
     const r = rooms.find(r => r.id === editId);
-    if (r) { r.room = roomNum; r.floor = floor; }
+    if (r) { r.room = roomNum; r.floor = floor; delete r.needsPlacement; }
   } else {
     rooms.push({ id: Date.now(), room: roomNum, floor, ...pending });
   }
@@ -345,21 +425,29 @@ function render() {
     const cy = r.y + r.h / 2;
     // Font size: fits within the box, clamped to a sensible range
     const fs = Math.max(8, Math.min(Math.floor(r.w * 0.3), Math.floor(r.h * 0.55), 22));
+    // CSV-imported rooms that haven't been placed yet render dashed amber
+    // instead of solid blue, so they're easy to spot and drag into position.
+    const fill   = r.needsPlacement ? 'rgba(245,158,11,.20)' : 'rgba(79,127,255,.18)';
+    const stroke = r.needsPlacement ? '#f59e0b' : '#4f7fff';
+    const dash   = r.needsPlacement ? ' stroke-dasharray="6 4"' : '';
+    const label  = r.needsPlacement ? r.room + ' •NEW' : r.room;
 
     return `
 <g data-rid="${r.id}" onclick="clickRoom(${r.id})" style="cursor:pointer">
   <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="3"
-    fill="rgba(79,127,255,.18)" stroke="#4f7fff" stroke-width="2.5"/>
+    fill="${fill}" stroke="${stroke}" stroke-width="2.5"${dash}/>
   <text x="${cx}" y="${cy}"
     text-anchor="middle" dominant-baseline="central"
     font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
     font-size="${fs}" font-weight="700" fill="#1e3a8a"
-    pointer-events="none">${r.room}</text>
+    pointer-events="none">${label}</text>
 </g>`;
   }).join('');
 
   const n = rooms.length;
-  document.getElementById('room-count').textContent = n + ' room' + (n !== 1 ? 's' : '');
+  const needsPlacement = rooms.filter(r => r.needsPlacement).length;
+  document.getElementById('room-count').textContent =
+    n + ' room' + (n !== 1 ? 's' : '') + (needsPlacement ? ` (${needsPlacement} new, drag to place)` : '');
 }
 
 // ─── ZOOM ────────────────────────────────────────────────────────────────────
@@ -386,8 +474,8 @@ function persist() {
 
 // ─── EXPORT ──────────────────────────────────────────────────────────────────
 function exportRooms() {
-  // Strip internal id, output clean JSON
-  const out  = rooms.map(({ id, ...r }) => r);
+  // Strip internal id and the editor-only needsPlacement flag, output clean JSON
+  const out  = rooms.map(({ id, needsPlacement, ...r }) => r);
   const json = JSON.stringify(out, null, 2);
   const btn  = document.getElementById('export-btn');
 
@@ -410,6 +498,57 @@ function exportRooms() {
     btn.style.background = '#16a34a';
     setTimeout(() => { btn.textContent = orig; btn.style.background = ''; }, 2000);
   });
+}
+
+// ─── CSV IMPORT (rooms) ──────────────────────────────────────────────────────
+// Adds any room numbers from the CSV that aren't already on the map as small
+// dashed placeholders you can drag into position, then delete + redraw at the
+// right size once you know exactly where they go. Existing rooms are never
+// touched or overwritten by an import.
+async function handleRoomsImportClick() {
+  const ok = await requireAdmin("Enter admin password to import room CSV:");
+  if (ok) document.getElementById("rooms-csv-input").click();
+}
+
+function handleRoomsCSV(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split("\n").filter(l => l.trim());
+    const hdr = lines[0].toLowerCase().split(",").map(h => h.trim().replace(/"/g, ""));
+    const col = k => hdr.indexOf(k);
+    const ri = col("room"), fi = col("floor");
+    if (ri === -1) { alert("CSV needs at minimum a 'room' column."); input.value = ""; return; }
+
+    const existing = new Set(rooms.map(r => r.room.trim().toLowerCase()));
+    let added = 0, skipped = 0;
+    let nextId = rooms.reduce((m, r) => Math.max(m, r.id), 0) + 1;
+
+    for (let i = 1; i < lines.length; i++) {
+      const c = lines[i].split(",").map(x => x.trim().replace(/^"|"$/g, ""));
+      const roomNum = c[ri]; if (!roomNum) continue;
+      const key = roomNum.trim().toLowerCase();
+      if (existing.has(key)) { skipped++; continue; }
+
+      const floor = fi !== -1 ? (c[fi] === "1" || c[fi].toLowerCase().includes("first") ? 1 : 0) : 0;
+      // Stack new placeholders down the left edge of their floor so they're
+      // easy to find and don't overlap each other.
+      const x = (floor === 1 ? 1170 : 0) + 20;
+      const y = 20 + added * 45;
+
+      rooms.push({ id: nextId++, room: roomNum, floor, x, y, w: 60, h: 36, needsPlacement: true });
+      existing.add(key);
+      added++;
+    }
+
+    persist();
+    render();
+    alert("\u2705 Imported " + added + " new room" + (added !== 1 ? "s" : "") +
+          (skipped ? " (" + skipped + " already on the map, left untouched)" : "") +
+          (added ? ". Drag the dashed placeholders into position, then delete + redraw each at the right size." : "."));
+    input.value = "";
+  };
+  reader.readAsText(file);
 }
 
 // ─── CLEAR ALL ───────────────────────────────────────────────────────────────

@@ -19,7 +19,13 @@ document.addEventListener('keydown', e => {
   toggleEditMode();
 });
 
-function toggleEditMode() {
+async function toggleEditMode() {
+  // Gate entering edit mode behind the admin password (requireAdmin lives in
+  // js/admin-auth.js). Exiting edit mode never needs a prompt.
+  if (!editMode) {
+    const ok = await requireAdmin("Enter admin password to edit zones:");
+    if (!ok) return;
+  }
   editMode = !editMode;
   document.getElementById('edit-banner').classList.toggle('visible', editMode);
   document.getElementById('map-wrap').classList.toggle('edit-active', editMode);

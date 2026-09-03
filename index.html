@@ -182,7 +182,7 @@
 </div>
 
 <div class="import-bar">
-  <button class="import-btn" onclick="document.getElementById('csv-input').click()">📋 Import CSV</button>
+  <button class="import-btn" onclick="handleImportClick()">📋 Import CSV</button>
   <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSV(this)">
   <span class="import-label">name, room, floor, department, zone</span>
   <span class="staff-count" id="staff-count"></span>
@@ -211,6 +211,7 @@
   </div>
 </div>
 
+<script src="js/admin-auth.js"></script>
 <script src="js/zones.js"></script>
 <script src="js/search.js"></script>
 <script src="js/pathfinding.js"></script>

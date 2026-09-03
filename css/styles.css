@@ -212,6 +212,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sheet-preview-step{font-size:13px;color:var(--text-2);line-height:1.4;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sheet-preview-step-cta{color:var(--accent-hi);font-weight:600;}
 .sheet-close-btn{
   flex-shrink:0;width:26px;height:26px;border-radius:50%;border:none;
   background:var(--bg-elevated);color:var(--text-2);font-size:13px;cursor:pointer;
