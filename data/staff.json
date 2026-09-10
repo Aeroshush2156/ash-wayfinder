@@ -107,7 +107,7 @@
         "role": "Assistant Principal",
         "dept": "Administration",
         "floor": 0,
-        "zone": "hsoffice"
+        "zone": "secondary_admin"
     },
     {
         "name": "Nicholas Cantlon",
@@ -437,7 +437,7 @@
         "role": "AP/IB Coordinator E",
         "dept": "Staff",
         "floor": 0,
-        "zone": "hsoffice"
+        "zone": "secondary_admin"
     },
     {
         "name": "Katrina Middelburg",
@@ -481,7 +481,7 @@
         "role": "HS Division Assistant",
         "dept": "Staff",
         "floor": 0,
-        "zone": "hsoffice"
+        "zone": "central_office"
     },
     {
         "name": "David Munro",
@@ -492,7 +492,7 @@
         "role": "Principal E",
         "dept": "Administration",
         "floor": 0,
-        "zone": "hsoffice"
+        "zone": "secondary_admin"
     },
     {
         "name": "Christine Muth Petrusz",
@@ -734,7 +734,7 @@
         "role": "AP/IB Coordinator Assistant",
         "dept": "Staff",
         "floor": 0,
-        "zone": "hsoffice"
+        "zone": "central_office"
     },
     {
         "name": "Rachael Vercellino",
@@ -1339,7 +1339,7 @@
         "role": "Primary Divisional Assistant",
         "dept": "Administration",
         "floor": 0,
-        "zone": "hsoffice"
+        "zone": "central_office"
     },
     {
         "name": "Ann Wiederhold",

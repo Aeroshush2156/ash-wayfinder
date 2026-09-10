@@ -78,6 +78,7 @@ fetch("data/staff.json")
     });
     document.getElementById("staff-count").textContent = staff.length + " staff";
     renderMap();
+    initFromQRParam();
   });
 
 // Load rooms independently — must complete before a user could realistically search
@@ -94,6 +95,36 @@ fetch("data/rooms.json")
     }
     console.log("[rooms] loaded", rooms.length, "rooms from localStorage");
   });
+
+// ─── QR CODE START LOCATION ─────────────────────────────────────────────────
+// A printed QR code encodes a URL like index.html?from=<slug>. On load we look
+// that slug up in data/qrpoints.json and, if found, pre-populate the user's
+// start location exactly as if they'd tapped that spot on the map — so all
+// they have to do is search for where they're going.
+async function initFromQRParam() {
+  const slug = new URLSearchParams(window.location.search).get("from");
+  if (!slug) return;
+  try {
+    const res = await fetch("data/qrpoints.json");
+    if (!res.ok) throw new Error("qrpoints.json fetch failed: " + res.status);
+    const points = await res.json();
+    const entry = points.find(p => p.id === slug);
+    if (!entry) { console.warn("[qr] unrecognized QR slug:", slug); return; }
+    console.log("[qr] resolved start location from QR:", slug, "→", entry);
+    applyQRStart(entry);
+  } catch (e) {
+    console.warn("[qr] failed to resolve QR start location:", e);
+  }
+}
+
+function applyQRStart(entry) {
+  youRoom = { room: entry.room, floor: entry.floor, label: entry.label };
+  youZone = entry.zone || null;
+  if (entry.floor !== currentFloor) switchFloor(entry.floor);
+  else { renderMap(); updateStatus(); }
+  const search = document.getElementById("search");
+  if (search) search.focus();
+}
 
 // ─── RENDER MAP ─────────────────────────────────────────────────────────────
 function renderMap() {
@@ -590,7 +621,7 @@ function recalculatePath() {
     return;
   }
   const startLabel = youRoom
-    ? `Room ${startRoom.room}`
+    ? (youRoom.label || `Room ${startRoom.room}`)
     : (zones.find(z => z.id === youZone)?.label || `Room ${startRoom.room}`);
   const destLabel = destRoomFromZone
     ? (zones.find(z => z.id === destZone)?.label || `Room ${destRoom.room}`)
@@ -634,6 +665,7 @@ function recalculatePath() {
 function clearAll() {
   youZone = null; destZone = null; destRoom = null; destRoomFromZone = false; destPerson = null;
   youRoom = null; currentPath = null;
+  if (window.location.search) history.replaceState(null, "", window.location.pathname);
   if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
   updateFloorTabs();
   setSheetState('hidden');

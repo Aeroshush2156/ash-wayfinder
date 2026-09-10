@@ -151,9 +151,12 @@ body {
 <div class="ctx-menu" id="ctx-menu">
   <div class="ctx-item" id="ctx-mark">🔶 Mark as Stairwell</div>
   <div class="ctx-item danger" id="ctx-unmark">✕ Remove Stairwell Tag</div>
+  <div class="ctx-item" id="ctx-mark-qr">📱 Mark as QR Anchor</div>
+  <div class="ctx-item danger" id="ctx-unmark-qr">✕ Remove QR Anchor</div>
 </div>
 
 <script src="js/admin-auth.js"></script>
+<script src="js/zones.js"></script>
 <script>
 // ─── ADMIN GATE ──────────────────────────────────────────────────────────────
 (function initAdminGate() {
@@ -306,17 +309,22 @@ function renderWaypoints() {
       const isSelected  = shiftFirst === w.id;
       const isHovered   = hoveredWpId === w.id;
       const isStairwell = !!w.stairwell;
+      const isQR        = !!w.qr;
 
-      // Color priority: selected (yellow) > hovered (light blue) > stairwell (orange) > normal (blue)
+      // Color priority: selected (yellow) > hovered (light blue) > QR anchor (violet) > stairwell (orange) > normal (blue)
       const fill   = isSelected  ? '#fbbf24'
                    : isHovered   ? '#93c5fd'
+                   : isQR        ? '#a855f7'
                    : isStairwell ? '#f97316'
                    :               '#3b82f6';
       const radius = isSelected ? 8 : 6;
 
-      // ID label: always visible for stairwells, hover/selected only for normal waypoints
-      const showLabel = isHovered || isSelected || isStairwell;
-      const labelText = isStairwell ? `${w.id} [${w.stairwellId}]` : w.id;
+      // ID label: always visible for stairwells/QR anchors, hover/selected only for normal waypoints
+      const showLabel = isHovered || isSelected || isStairwell || isQR;
+      const tags = [];
+      if (isStairwell) tags.push(`stairs:${w.stairwellId}`);
+      if (isQR)         tags.push(`qr:${w.qrId}`);
+      const labelText = tags.length ? `${w.id} [${tags.join(', ')}]` : w.id;
       const label = showLabel
         ? `<text x="${w.x + 10}" y="${w.y - 9}"
             font-family="-apple-system,sans-serif" font-size="10" fill="#f1f5f9"
@@ -324,10 +332,11 @@ function renderWaypoints() {
             pointer-events="none">${labelText}</text>`
         : '';
 
-      // Inner label: stairwell waypoints show "S", others show floor number (0 or 1)
+      // Inner label: QR anchors show "Q", stairwells show "S", others show floor number (0 or 1)
+      const innerMarkText = isQR ? 'Q' : (isStairwell ? 'S' : w.floor);
       const stairMark = `<text x="${w.x}" y="${w.y + 1}" text-anchor="middle" dominant-baseline="central"
           font-size="8" fill="white" font-weight="700"
-          pointer-events="none">${isStairwell ? 'S' : w.floor}</text>`;
+          pointer-events="none">${innerMarkText}</text>`;
 
       return `<g class="wp-group" data-id="${w.id}" style="cursor:pointer">
         <!-- hit area -->
@@ -481,9 +490,10 @@ document.getElementById('overlay-svg').addEventListener('mousemove', function (e
   if (hoveredWpId) {
     const wp = waypoints.find(w => w.id === hoveredWpId);
     if (wp) {
-      tooltip.textContent   = wp.stairwell
-        ? `${wp.id}  (${wp.x}, ${wp.y})  🔶 stairwell: ${wp.stairwellId}`
-        : `${wp.id}  (${wp.x}, ${wp.y})`;
+      const ttParts = [`${wp.id}  (${wp.x}, ${wp.y})`];
+      if (wp.stairwell) ttParts.push(`🔶 stairwell: ${wp.stairwellId}`);
+      if (wp.qr)         ttParts.push(`📱 QR: ${wp.qrId} — "${wp.qrLabel}" (room ${wp.qrRoom}, zone ${wp.qrZone})`);
+      tooltip.textContent = ttParts.join('  ');
       tooltip.style.display = 'block';
       tooltip.style.left    = (e.clientX + 14) + 'px';
       tooltip.style.top     = (e.clientY - 8)  + 'px';
@@ -535,6 +545,11 @@ document.getElementById('overlay-svg').addEventListener('contextmenu', function 
   markBtn.textContent    = wp && wp.stairwell ? '✏️ Edit Stairwell ID' : '🔶 Mark as Stairwell';
   unmarkBtn.style.display = (wp && wp.stairwell) ? 'block' : 'none';
 
+  const markQrBtn   = document.getElementById('ctx-mark-qr');
+  const unmarkQrBtn = document.getElementById('ctx-unmark-qr');
+  markQrBtn.textContent    = wp && wp.qr ? '✏️ Edit QR Anchor' : '📱 Mark as QR Anchor';
+  unmarkQrBtn.style.display = (wp && wp.qr) ? 'block' : 'none';
+
   menu.style.left    = e.clientX + 'px';
   menu.style.top     = e.clientY + 'px';
   menu.style.display = 'block';
@@ -570,6 +585,86 @@ document.getElementById('ctx-unmark').addEventListener('click', function () {
   delete wp.stairwellId;
   saveAll();
   console.log('[stairwell] stairwell tag removed from:', targetId);
+  render();
+});
+
+// ── QR anchor tagging ────────────────────────────────────────────────────────
+// Best-guess nearest room/zone for a waypoint, same "closest center" approach
+// app.js uses for resolveRoomForZone() — admin can still override the prompt.
+function nearestRoom(wp) {
+  const candidates = rooms.filter(r => r.floor === wp.floor);
+  let best = null, bestDist = Infinity;
+  candidates.forEach(r => {
+    const d = Math.hypot((r.x + r.w / 2) - wp.x, (r.y + r.h / 2) - wp.y);
+    if (d < bestDist) { bestDist = d; best = r; }
+  });
+  return best ? best.room : '';
+}
+
+function nearestZone(wp) {
+  if (typeof zones === 'undefined') return '';
+  const floorZones = zones.filter(z => z.floor === wp.floor);
+  const containing = floorZones.find(z =>
+    wp.x >= z.x && wp.x <= z.x + z.w && wp.y >= z.y && wp.y <= z.y + z.h);
+  if (containing) return containing.id;
+  let best = null, bestDist = Infinity;
+  floorZones.forEach(z => {
+    const d = Math.hypot((z.x + z.w / 2) - wp.x, (z.y + z.h / 2) - wp.y);
+    if (d < bestDist) { bestDist = d; best = z; }
+  });
+  return best ? best.id : '';
+}
+
+document.getElementById('ctx-mark-qr').addEventListener('click', function () {
+  console.log('[qr] ctx-mark-qr clicked, ctxTargetId:', ctxTargetId);
+  const targetId = ctxTargetId;  // capture before hideCtxMenu nulls it
+  hideCtxMenu();
+  if (!targetId) return;
+  const wp = waypoints.find(w => w.id === targetId);
+  if (!wp) return;
+
+  const idEntered = prompt(
+    'QR slug (used in the printed URL, e.g. mathwing-stair-1f):', wp.qrId || '');
+  if (!idEntered || !idEntered.trim()) return;
+
+  const labelEntered = prompt(
+    'Human-readable label (printed under the QR code):', wp.qrLabel || '');
+  if (!labelEntered || !labelEntered.trim()) return;
+
+  const roomGuess = wp.qrRoom || nearestRoom(wp);
+  const roomEntered = prompt(
+    'Nearest room for routing (auto-suggested — edit if wrong):', roomGuess);
+  if (!roomEntered || !roomEntered.trim()) return;
+
+  const zoneGuess = wp.qrZone || nearestZone(wp);
+  const zoneEntered = prompt(
+    'Zone id to highlight as "you are here" (auto-suggested — edit if wrong):', zoneGuess);
+  if (!zoneEntered || !zoneEntered.trim()) return;
+
+  wp.qr       = true;
+  wp.qrId     = idEntered.trim();
+  wp.qrLabel  = labelEntered.trim();
+  wp.qrRoom   = roomEntered.trim();
+  wp.qrZone   = zoneEntered.trim();
+  saveAll();
+  console.log('[qr] updated waypoint:', JSON.parse(JSON.stringify(wp)));
+  render();
+});
+
+document.getElementById('ctx-unmark-qr').addEventListener('click', function () {
+  console.log('[qr] ctx-unmark-qr clicked, ctxTargetId:', ctxTargetId);
+  const targetId = ctxTargetId;  // capture before hideCtxMenu nulls it
+  hideCtxMenu();
+  if (!targetId) return;
+  const wp = waypoints.find(w => w.id === targetId);
+  if (!wp) return;
+  delete wp.qr;
+  delete wp.qrId;
+  delete wp.qrLabel;
+  delete wp.qrRoom;
+  delete wp.qrZone;
+  saveAll();
+  console.log('[qr] QR anchor tag removed from:', targetId);
   render();
 });
 
@@ -631,6 +726,21 @@ function exportData() {
   a.download = 'waypoints.json';
   a.click();
   URL.revokeObjectURL(url);
+
+  // Also export data/qrpoints.json when at least one waypoint is tagged as a QR anchor.
+  const qrWps = waypoints.filter(w => w.qr && w.qrId);
+  if (qrWps.length) {
+    const qrPoints = qrWps.map(w => ({
+      id: w.qrId, label: w.qrLabel, room: w.qrRoom, floor: w.floor, zone: w.qrZone,
+    }));
+    const qrBlob = new Blob([JSON.stringify(qrPoints, null, 2)], { type: 'application/json' });
+    const qrUrl  = URL.createObjectURL(qrBlob);
+    const qrA    = document.createElement('a');
+    qrA.href     = qrUrl;
+    qrA.download = 'qrpoints.json';
+    qrA.click();
+    URL.revokeObjectURL(qrUrl);
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────

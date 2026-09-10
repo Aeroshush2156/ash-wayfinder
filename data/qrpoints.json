@@ -1,0 +1,212 @@
+[
+  {
+    "id": "sporthall_entry",
+    "label": "Sporthall Entry",
+    "room": "1.76",
+    "floor": 0,
+    "zone": "sporthall"
+  },
+  {
+    "id": "cafeteria_junction",
+    "label": "Cafeteria Junction",
+    "room": "1.80",
+    "floor": 0,
+    "zone": "cafeteria"
+  },
+  {
+    "id": "main_entry",
+    "label": "Main Entry",
+    "room": "1.03",
+    "floor": 0,
+    "zone": "mainentry"
+  },
+  {
+    "id": "ml_english_library_junction",
+    "label": "Modern Lang/Library/English Junction",
+    "room": "1.44",
+    "floor": 0,
+    "zone": "ml_english_hallway"
+  },
+  {
+    "id": "english_ss_hw",
+    "label": "English/Social Sudies Hallway",
+    "room": "1.60",
+    "floor": 0,
+    "zone": "english"
+  },
+  {
+    "id": "perf_arts_backstage",
+    "label": "Performing Arts Backstage",
+    "room": "1.83",
+    "floor": 0,
+    "zone": "perfarts_g"
+  },
+  {
+    "id": "theatre_entry",
+    "label": "Theatre Entry",
+    "room": "1.82",
+    "floor": 0,
+    "zone": "perfarts_g"
+  },
+  {
+    "id": "perf_arts_hallway",
+    "label": "Performing Arts Hallway",
+    "room": "1.88",
+    "floor": 0,
+    "zone": "perfarts_g"
+  },
+  {
+    "id": "vis_arts_health",
+    "label": "Health Entry",
+    "room": "2.79",
+    "floor": 1,
+    "zone": "visualarts"
+  },
+  {
+    "id": "visual_arts_entry",
+    "label": "Visual Arts Entry",
+    "room": "2.82",
+    "floor": 1,
+    "zone": "visualarts"
+  },
+  {
+    "id": "backstage_entry_upper",
+    "label": "Backstage Entry First Floor",
+    "room": "2.88",
+    "floor": 1,
+    "zone": "perfarts_f"
+  },
+  {
+    "id": "it_office",
+    "label": "Middle School/IT Office Hallway",
+    "room": "2.02",
+    "floor": 1,
+    "zone": "ms_it_hallway"
+  },
+  {
+    "id": "science_hallway_entry",
+    "label": "Science Hallway Entry",
+    "room": "2.44",
+    "floor": 1,
+    "zone": "science_hallway"
+  },
+  {
+    "id": "science_wing_s",
+    "label": "Science Wing South",
+    "room": "2.49",
+    "floor": 1,
+    "zone": "sciences"
+  },
+  {
+    "id": "science_wing_n",
+    "label": "Science Wing North",
+    "room": "2.51",
+    "floor": 1,
+    "zone": "sciences"
+  },
+  {
+    "id": "math_entry",
+    "label": "Mathematics Wing",
+    "room": "2.64",
+    "floor": 1,
+    "zone": "mathematics"
+  },
+  {
+    "id": "cafeteria_upper",
+    "label": "1st Floor Stairwell - Above Cafeteria",
+    "room": "2.84",
+    "floor": 1,
+    "zone": "foodtech"
+  },
+  {
+    "id": "central_office",
+    "label": "Central Office",
+    "room": "1.03",
+    "floor": 0,
+    "zone": "central_office_hallway"
+  },
+  {
+    "id": "ss_hw",
+    "label": "Social Studies Hallway",
+    "room": "1.49",
+    "floor": 0,
+    "zone": "socialstud"
+  },
+  {
+    "id": "grd5_entry",
+    "label": "Grade 5 Entry",
+    "room": "1.19",
+    "floor": 0,
+    "zone": "es_rooms_g"
+  },
+  {
+    "id": "grd5",
+    "label": "Grade 5",
+    "room": "1.24",
+    "floor": 0,
+    "zone": "es_rooms_g"
+  },
+  {
+    "id": "atrium_entry",
+    "label": "Atrium Entry",
+    "room": "1.19",
+    "floor": 0,
+    "zone": "atrium"
+  },
+  {
+    "id": "grade4_entry",
+    "label": "Grade 4 Entry",
+    "room": "1.17",
+    "floor": 0,
+    "zone": "es_classrooms_cont"
+  },
+  {
+    "id": "grade_8_wing",
+    "label": "Grade 8 Wing",
+    "room": "1.32",
+    "floor": 0,
+    "zone": "library_ms_hallway"
+  },
+  {
+    "id": "grade6",
+    "label": "Grade 6",
+    "room": "2.04",
+    "floor": 1,
+    "zone": "ms_it_hallway"
+  },
+  {
+    "id": "grade6_stairs",
+    "label": "Grade 6 Stairwell",
+    "room": "2.25",
+    "floor": 1,
+    "zone": "ms_rooms_f"
+  },
+  {
+    "id": "grade3",
+    "label": "Grade 3",
+    "room": "2.22",
+    "floor": 1,
+    "zone": "es_rooms_f"
+  },
+  {
+    "id": "grade7_entry",
+    "label": "Grade 7 Entry",
+    "room": "2.36",
+    "floor": 1,
+    "zone": "ms_rooms_f"
+  },
+  {
+    "id": "grade7",
+    "label": "Grade 7",
+    "room": "2.41",
+    "floor": 1,
+    "zone": "ms_rooms_f"
+  },
+  {
+    "id": "modern_lang_math",
+    "label": "Modern Languages (lower) Math (upper)",
+    "room": "1.64",
+    "floor": 0,
+    "zone": "ml_english_hallway"
+  }
+]

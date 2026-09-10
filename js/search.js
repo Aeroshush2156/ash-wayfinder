@@ -48,7 +48,7 @@ function selectPerson(name) {
   console.log('[selectPerson] recalculatePath() will NOT be called — Pathfinding.findPath() invoked directly below');
   if (startRoom && typeof Pathfinding !== "undefined") {
     const startLabel = youRoom
-      ? `Room ${startRoom.room}`
+      ? (youRoom.label || `Room ${startRoom.room}`)
       : (zones.find(z => z.id === youZone)?.label || `Room ${startRoom.room}`);
     const destLabel = `Room ${s.room}`;
     console.log('[selectPerson] calling Pathfinding.findPath:', startRoom.room, startRoom.floor, '→', s.room, s.floor, '| labels:', startLabel, '→', destLabel);

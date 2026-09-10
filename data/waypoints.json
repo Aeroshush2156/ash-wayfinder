@@ -4,13 +4,23 @@
       "id": "wp_001",
       "x": 430,
       "y": 640,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "sporthall_entry",
+      "qrLabel": "Sporthall Entry",
+      "qrRoom": "1.76",
+      "qrZone": "sporthall"
     },
     {
       "id": "wp_002",
       "x": 430,
       "y": 780,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "cafeteria_junction",
+      "qrLabel": "Cafeteria Junction",
+      "qrRoom": "1.80",
+      "qrZone": "cafeteria"
     },
     {
       "id": "wp_003",
@@ -22,7 +32,12 @@
       "id": "wp_011",
       "x": 660,
       "y": 780,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "main_entry",
+      "qrLabel": "Main Entry",
+      "qrRoom": "1.03",
+      "qrZone": "mainentry"
     },
     {
       "id": "wp_012",
@@ -34,7 +49,12 @@
       "id": "wp_013",
       "x": 780,
       "y": 610,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "ml_english_library_junction",
+      "qrLabel": "Modern Lang/Library/English Junction",
+      "qrRoom": "1.44",
+      "qrZone": "ml_english_hallway"
     },
     {
       "id": "wp_014",
@@ -52,7 +72,12 @@
       "id": "wp_016",
       "x": 780,
       "y": 430,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "english_ss_hw",
+      "qrLabel": "English/Social Sudies Hallway",
+      "qrRoom": "1.60",
+      "qrZone": "english"
     },
     {
       "id": "wp_017",
@@ -64,19 +89,34 @@
       "id": "wp_018",
       "x": 420,
       "y": 1070,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "perf_arts_backstage",
+      "qrLabel": "Performing Arts Backstage",
+      "qrRoom": "1.83",
+      "qrZone": "perfarts_g"
     },
     {
       "id": "wp_019",
       "x": 430,
       "y": 860,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "theatre_entry",
+      "qrLabel": "Theatre Entry",
+      "qrRoom": "1.82",
+      "qrZone": "perfarts_g"
     },
     {
       "id": "wp_020",
       "x": 430,
       "y": 900,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "perf_arts_hallway",
+      "qrLabel": "Performing Arts Hallway",
+      "qrRoom": "1.88",
+      "qrZone": "perfarts_g"
     },
     {
       "id": "wp_021",
@@ -162,7 +202,12 @@
       "id": "wp_033",
       "x": 1560,
       "y": 650,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "vis_arts_health",
+      "qrLabel": "Health Entry",
+      "qrRoom": "2.79",
+      "qrZone": "visualarts"
     },
     {
       "id": "wp_034",
@@ -198,7 +243,12 @@
       "id": "wp_039",
       "x": 1540,
       "y": 750,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "visual_arts_entry",
+      "qrLabel": "Visual Arts Entry",
+      "qrRoom": "2.82",
+      "qrZone": "visualarts"
     },
     {
       "id": "wp_040",
@@ -234,7 +284,12 @@
       "id": "wp_045",
       "x": 1540,
       "y": 1060,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "backstage_entry_upper",
+      "qrLabel": "Backstage Entry First Floor",
+      "qrRoom": "2.88",
+      "qrZone": "perfarts_f"
     },
     {
       "id": "wp_046",
@@ -252,7 +307,12 @@
       "id": "wp_048",
       "x": 1890,
       "y": 860,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "it_office",
+      "qrLabel": "Middle School/IT Office Hallway",
+      "qrRoom": "2.02",
+      "qrZone": "ms_it_hallway"
     },
     {
       "id": "wp_049",
@@ -274,7 +334,12 @@
       "id": "wp_051",
       "x": 1900,
       "y": 670,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "science_hallway_entry",
+      "qrLabel": "Science Hallway Entry",
+      "qrRoom": "2.44",
+      "qrZone": "science_hallway"
     },
     {
       "id": "wp_052",
@@ -304,7 +369,12 @@
       "id": "wp_056",
       "x": 1970,
       "y": 430,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "science_wing_s",
+      "qrLabel": "Science Wing South",
+      "qrRoom": "2.49",
+      "qrZone": "sciences"
     },
     {
       "id": "wp_057",
@@ -316,7 +386,12 @@
       "id": "wp_058",
       "x": 2120,
       "y": 430,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "science_wing_n",
+      "qrLabel": "Science Wing North",
+      "qrRoom": "2.51",
+      "qrZone": "sciences"
     },
     {
       "id": "wp_059",
@@ -328,7 +403,12 @@
       "id": "wp_061",
       "x": 1720,
       "y": 610,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "math_entry",
+      "qrLabel": "Mathematics Wing",
+      "qrRoom": "2.64",
+      "qrZone": "mathematics"
     },
     {
       "id": "wp_062",
@@ -364,7 +444,12 @@
       "id": "wp_067",
       "x": 1560,
       "y": 850,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "cafeteria_upper",
+      "qrLabel": "1st Floor Stairwell - Above Cafeteria",
+      "qrRoom": "2.84",
+      "qrZone": "foodtech"
     },
     {
       "id": "wp_068",
@@ -400,7 +485,12 @@
       "id": "wp_073",
       "x": 780,
       "y": 890,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "central_office",
+      "qrLabel": "Central Office",
+      "qrRoom": "1.03",
+      "qrZone": "central_office_hallway"
     },
     {
       "id": "wp_074",
@@ -416,7 +506,12 @@
       "y": 440,
       "floor": 0,
       "stairwell": true,
-      "stairwellId": "science_east"
+      "stairwellId": "science_east",
+      "qr": true,
+      "qrId": "ss_hw",
+      "qrLabel": "Social Studies Hallway",
+      "qrRoom": "1.49",
+      "qrZone": "socialstud"
     },
     {
       "id": "wp_076",
@@ -490,7 +585,12 @@
       "id": "wp_086",
       "x": 780,
       "y": 1050,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "grd5_entry",
+      "qrLabel": "Grade 5 Entry",
+      "qrRoom": "1.19",
+      "qrZone": "es_rooms_g"
     },
     {
       "id": "wp_087",
@@ -514,7 +614,12 @@
       "id": "wp_090",
       "x": 900,
       "y": 1040,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "grd5",
+      "qrLabel": "Grade 5",
+      "qrRoom": "1.24",
+      "qrZone": "es_rooms_g"
     },
     {
       "id": "wp_091",
@@ -546,13 +651,23 @@
       "id": "wp_095",
       "x": 780,
       "y": 1120,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "atrium_entry",
+      "qrLabel": "Atrium Entry",
+      "qrRoom": "1.19",
+      "qrZone": "atrium"
     },
     {
       "id": "wp_096",
       "x": 770,
       "y": 1260,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "grade4_entry",
+      "qrLabel": "Grade 4 Entry",
+      "qrRoom": "1.17",
+      "qrZone": "es_classrooms_cont"
     },
     {
       "id": "wp_097",
@@ -608,7 +723,12 @@
       "id": "wp_105",
       "x": 780,
       "y": 730,
-      "floor": 0
+      "floor": 0,
+      "qr": true,
+      "qrId": "grade_8_wing",
+      "qrLabel": "Grade 8 Wing",
+      "qrRoom": "1.32",
+      "qrZone": "library_ms_hallway"
     },
     {
       "id": "wp_106",
@@ -652,7 +772,12 @@
       "id": "wp_112",
       "x": 1900,
       "y": 1030,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "grade6",
+      "qrLabel": "Grade 6",
+      "qrRoom": "2.04",
+      "qrZone": "ms_it_hallway"
     },
     {
       "id": "wp_113",
@@ -676,7 +801,12 @@
       "id": "wp_116",
       "x": 2020,
       "y": 1040,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "grade6_stairs",
+      "qrLabel": "Grade 6 Stairwell",
+      "qrRoom": "2.25",
+      "qrZone": "ms_rooms_f"
     },
     {
       "id": "wp_117",
@@ -700,7 +830,12 @@
       "id": "wp_120",
       "x": 1890,
       "y": 1310,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "grade3",
+      "qrLabel": "Grade 3",
+      "qrRoom": "2.22",
+      "qrZone": "es_rooms_f"
     },
     {
       "id": "wp_121",
@@ -742,7 +877,12 @@
       "id": "wp_127",
       "x": 1900,
       "y": 730,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "grade7_entry",
+      "qrLabel": "Grade 7 Entry",
+      "qrRoom": "2.36",
+      "qrZone": "ms_rooms_f"
     },
     {
       "id": "wp_128",
@@ -754,7 +894,12 @@
       "id": "wp_129",
       "x": 2020,
       "y": 730,
-      "floor": 1
+      "floor": 1,
+      "qr": true,
+      "qrId": "grade7",
+      "qrLabel": "Grade 7",
+      "qrRoom": "2.41",
+      "qrZone": "ms_rooms_f"
     },
     {
       "id": "wp_130",
@@ -824,7 +969,12 @@
       "y": 610,
       "floor": 0,
       "stairwell": true,
-      "stairwellId": "math"
+      "stairwellId": "math",
+      "qr": true,
+      "qrId": "modern_lang_math",
+      "qrLabel": "Modern Languages (lower) Math (upper)",
+      "qrRoom": "1.64",
+      "qrZone": "ml_english_hallway"
     }
   ],
   "edges": [
