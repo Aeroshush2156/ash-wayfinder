@@ -18,7 +18,7 @@ const zones = [
   {id:"m3", floor:0, label:"M3", emoji:undefined, type:"special", x:640, y:1146, w:116, h:88},
   {id:"es_classrooms_cont", floor:0, label:"ES Classrooms(cont)", emoji:undefined, type:"class", x:631, y:1255, w:390, h:152},
   {id:"ms_classrooms", floor:0, label:"MS Classrooms", emoji:undefined, type:"class", x:793, y:672, w:237, h:132},
-  {id:"cafeteria_cont", floor:0, label:"Cafeteria(cont)", emoji:undefined, type:"special", x:297, y:644, w:141, h:111},
+  {id:"cafeteria_cont", floor:0, label:"Cafeteria(cont)", emoji:undefined, type:"special", x:453, y:673, w:67, h:78},
   {id:"ml_english_hallway", floor:0, label:"ML & English Hallway", emoji:undefined, type:"special", x:599, y:599, w:185, h:20},
   {id:"library_ms_hallway", floor:0, label:"Library/MS Hallway", emoji:undefined, type:"special", x:763, y:639, w:20, h:138},
   {id:"central_office", floor:0, label:"Central Office", emoji:undefined, type:"special", x:722, y:841, w:40, h:40},
