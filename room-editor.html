@@ -431,11 +431,18 @@ function render() {
     const stroke = r.needsPlacement ? '#f59e0b' : '#4f7fff';
     const dash   = r.needsPlacement ? ' stroke-dasharray="6 4"' : '';
     const label  = r.needsPlacement ? r.room + ' •NEW' : r.room;
+    // The floor plan image has its own small printed room numbers baked in.
+    // Back our label with an opaque chip so it fully covers that printed
+    // text instead of the two overlapping into an unreadable jumble.
+    const labelW = label.length * fs * 0.6 + 6;
+    const labelH = fs * 1.15;
 
     return `
 <g data-rid="${r.id}" onclick="clickRoom(${r.id})" style="cursor:pointer">
   <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="3"
     fill="${fill}" stroke="${stroke}" stroke-width="2.5"${dash}/>
+  <rect x="${cx - labelW / 2}" y="${cy - labelH / 2}" width="${labelW}" height="${labelH}" rx="3"
+    fill="#ffffff" opacity="0.88" pointer-events="none"/>
   <text x="${cx}" y="${cy}"
     text-anchor="middle" dominant-baseline="central"
     font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"

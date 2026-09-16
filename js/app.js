@@ -81,12 +81,17 @@ fetch("data/staff.json")
     initFromQRParam();
   });
 
-// Load rooms independently — must complete before a user could realistically search
+// Load rooms independently — must complete before a user could realistically search.
+// This fetch races the staff.json fetch above (whichever finishes first triggers
+// the first renderMap() call), so re-render here too in case rooms.json is still
+// the one still in flight — otherwise the rooms layer can stay blank until the
+// next click, with nothing on screen to say why.
 fetch("data/rooms.json")
   .then(r => { if (!r.ok) throw new Error("rooms fetch failed"); return r.json(); })
   .then(data => {
     rooms = Array.isArray(data) ? data : [];
     console.log("[rooms] loaded", rooms.length, "rooms from data/rooms.json");
+    renderMap();
   })
   .catch(() => {
     const saved = localStorage.getItem("rooms");
@@ -94,6 +99,7 @@ fetch("data/rooms.json")
       try { rooms = JSON.parse(saved); } catch(e) {}
     }
     console.log("[rooms] loaded", rooms.length, "rooms from localStorage");
+    renderMap();
   });
 
 // ─── QR CODE START LOCATION ─────────────────────────────────────────────────
@@ -194,10 +200,17 @@ function renderMap() {
       const sw     = (isYouRoom || isTarget) ? 2.5 : 1;
       const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
       const fs = Math.max(8, Math.min(Math.floor(r.w * 0.3), Math.floor(r.h * 0.55), 18));
-      const labelColor = isYouRoom ? "#4f7fff" : isTarget ? "#dc2626" : "rgba(60,60,60,0.75)";
+      const labelColor = isYouRoom ? "#4f7fff" : isTarget ? "#dc2626" : "rgba(60,60,60,0.9)";
+      // The floor plan image has its own small printed room numbers baked in.
+      // Back our label with an opaque chip so it fully covers that printed
+      // text instead of the two overlapping into an unreadable jumble.
+      const labelW = r.room.length * fs * 0.62 + 6;
+      const labelH = fs * 1.15;
       return `<g pointer-events="none">
         <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="3"
           fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+        <rect x="${cx - labelW / 2}" y="${cy - labelH / 2}" width="${labelW}" height="${labelH}" rx="3"
+          fill="#ffffff" opacity="0.88"/>
         <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
           font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"
           font-size="${fs}" font-weight="700" fill="${labelColor}">${r.room}</text>
