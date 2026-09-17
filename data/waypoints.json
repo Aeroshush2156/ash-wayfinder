@@ -1689,6 +1689,16 @@
       "waypointId": "wp_022"
     },
     {
+      "room": "1.03",
+      "floor": 0,
+      "waypointId": "wp_073"
+    },
+    {
+      "room": "1.75",
+      "floor": 0,
+      "waypointId": "wp_072"
+    },
+    {
       "room": "1.76",
       "floor": 0,
       "waypointId": "wp_079"
