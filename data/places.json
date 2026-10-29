@@ -17,16 +17,16 @@
   },
   {
     "name": "The Nest",
-    "type": "Common Area",
+    "type": "Meeting Room",
     "aliases": [
       "nest",
       "the nest",
-      "2.36",
-      "2.37"
+      "meeting room",
+      "1.26"
     ],
-    "floor": 1,
-    "zone": "ms_rooms_f",
-    "room": "2.36",
+    "floor": 0,
+    "zone": "es_rooms_g",
+    "room": "1.26",
     "routeRoom": null
   },
   {
