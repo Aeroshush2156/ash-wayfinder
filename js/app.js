@@ -557,7 +557,11 @@ function showInfo(zone, person) {
   }
 
   updateStatus();
-  renderMap();
+  // Once a route exists, show the floor where the journey starts
+  const startFloor = currentPath && currentPath.waypoints && currentPath.waypoints.length
+    ? currentPath.waypoints[0].floor : null;
+  if (startFloor !== null && startFloor !== currentFloor) switchFloor(startFloor);
+  else renderMap();
 
   // Populate collapsed-state preview
   const previewDest = document.getElementById('sheet-preview-dest');
