@@ -1,0 +1,279 @@
+[
+  {
+    "name": "Cafeteria",
+    "type": "Dining",
+    "aliases": [
+      "cafeteria",
+      "canteen",
+      "lunch",
+      "cafe",
+      "food",
+      "dining"
+    ],
+    "floor": 0,
+    "zone": "cafeteria",
+    "room": null,
+    "routeRoom": "1.80"
+  },
+  {
+    "name": "The Nest",
+    "type": "Common Area",
+    "aliases": [
+      "nest",
+      "the nest",
+      "2.36",
+      "2.37"
+    ],
+    "floor": 1,
+    "zone": "ms_rooms_f",
+    "room": "2.36",
+    "routeRoom": null
+  },
+  {
+    "name": "The Pod",
+    "type": "Common Area",
+    "aliases": [
+      "pod",
+      "the pod",
+      "1.73"
+    ],
+    "floor": 0,
+    "zone": "pod",
+    "room": "1.73",
+    "routeRoom": null
+  },
+  {
+    "name": "Engagement",
+    "type": "Office",
+    "aliases": [
+      "engagement",
+      "engagement office",
+      "2.94"
+    ],
+    "floor": 1,
+    "zone": "engagement",
+    "room": "2.94",
+    "routeRoom": null
+  },
+  {
+    "name": "Nurse's Office",
+    "type": "Health Office",
+    "aliases": [
+      "nurse",
+      "health office",
+      "sick",
+      "medical",
+      "first aid",
+      "1.28"
+    ],
+    "floor": 0,
+    "zone": "nurse",
+    "room": "1.28",
+    "routeRoom": null
+  },
+  {
+    "name": "Library",
+    "type": "Library",
+    "aliases": [
+      "library",
+      "librarian",
+      "books",
+      "media center",
+      "1.74"
+    ],
+    "floor": 0,
+    "zone": "library_g",
+    "room": "1.74",
+    "routeRoom": null
+  },
+  {
+    "name": "Main Entry / Reception",
+    "type": "Entrance",
+    "aliases": [
+      "main entry",
+      "main entrance",
+      "entrance",
+      "reception",
+      "front desk",
+      "visitor",
+      "sign in",
+      "exit"
+    ],
+    "floor": 0,
+    "zone": "mainentry",
+    "room": null,
+    "routeRoom": "1.03"
+  },
+  {
+    "name": "Central Office",
+    "type": "Office",
+    "aliases": [
+      "central office",
+      "office",
+      "division office",
+      "hs office",
+      "1.03"
+    ],
+    "floor": 0,
+    "zone": "central_office",
+    "room": "1.03",
+    "routeRoom": null
+  },
+  {
+    "name": "Secondary Admin / Principal's Office",
+    "type": "Office",
+    "aliases": [
+      "principal",
+      "assistant principal",
+      "secondary admin",
+      "admin office",
+      "hs principal",
+      "ap/ib coordinator",
+      "1.31"
+    ],
+    "floor": 0,
+    "zone": "secondary_admin",
+    "room": "1.31",
+    "routeRoom": null
+  },
+  {
+    "name": "Counseling Office",
+    "type": "Office",
+    "aliases": [
+      "counseling",
+      "counselling",
+      "counselor",
+      "counsellor",
+      "registrar",
+      "student support",
+      "2.50"
+    ],
+    "floor": 1,
+    "zone": "counseling",
+    "room": "2.50",
+    "routeRoom": null
+  },
+  {
+    "name": "Testing Center",
+    "type": "Testing",
+    "aliases": [
+      "testing center",
+      "testing",
+      "test room",
+      "exam",
+      "exams",
+      "2.46"
+    ],
+    "floor": 1,
+    "zone": "testing",
+    "room": "2.46",
+    "routeRoom": null
+  },
+  {
+    "name": "Sport Hall",
+    "type": "Athletics",
+    "aliases": [
+      "sport hall",
+      "sports hall",
+      "gym",
+      "gymnasium",
+      "big gym",
+      "athletics",
+      "athletic director",
+      "1.78"
+    ],
+    "floor": 0,
+    "zone": "sporthall",
+    "room": "1.78",
+    "routeRoom": null
+  },
+  {
+    "name": "Small Gym",
+    "type": "Athletics",
+    "aliases": [
+      "small gym",
+      "gym",
+      "1.80"
+    ],
+    "floor": 0,
+    "zone": "smallgym",
+    "room": "1.80",
+    "routeRoom": null
+  },
+  {
+    "name": "Theater",
+    "type": "Performing Arts",
+    "aliases": [
+      "theater",
+      "theatre",
+      "auditorium",
+      "stage",
+      "performing arts",
+      "1.82"
+    ],
+    "floor": 0,
+    "zone": "perfarts_g",
+    "room": "1.82",
+    "routeRoom": null
+  },
+  {
+    "name": "Atrium",
+    "type": "Common Area",
+    "aliases": [
+      "atrium"
+    ],
+    "floor": 0,
+    "zone": "atrium",
+    "room": null,
+    "routeRoom": "1.19"
+  },
+  {
+    "name": "M3",
+    "type": "Common Area",
+    "aliases": [
+      "m3",
+      "m 3"
+    ],
+    "floor": 0,
+    "zone": "m3",
+    "room": "M3",
+    "routeRoom": null,
+    "note": "M3 is below ground level. Take the stairs down near the Atrium."
+  },
+  {
+    "name": "KMR",
+    "type": "Common Area",
+    "aliases": [
+      "kmr"
+    ],
+    "floor": 0,
+    "zone": "kmr",
+    "room": null,
+    "routeRoom": "1.17"
+  },
+  {
+    "name": "Mezzanine",
+    "type": "Common Area",
+    "aliases": [
+      "mezzanine"
+    ],
+    "floor": 1,
+    "zone": "mezzanine",
+    "room": null,
+    "routeRoom": "2.79"
+  },
+  {
+    "name": "Fitness / Weight Room",
+    "type": "Athletics",
+    "aliases": [
+      "weight room",
+      "weights",
+      "fitness",
+      "health / weight"
+    ],
+    "floor": 1,
+    "zone": "health_wt",
+    "room": null,
+    "routeRoom": "2.95"
+  }
+]

@@ -253,15 +253,30 @@ function renderRooms() {
     const isPending = pendingRoom &&
                       pendingRoom.room  === r.room &&
                       pendingRoom.floor === r.floor;
+    // In R mode, make rooms clearly visible: unlinked rooms orange-dashed,
+    // linked rooms green, the selected room solid orange — each with a label.
+    const isLinked = roomConnections.some(c => c.room === r.room && c.floor === r.floor);
+    const fill   = isPending ? 'rgba(234,88,12,0.25)'
+                 : rMode     ? (isLinked ? 'rgba(22,163,74,0.12)' : 'rgba(234,88,12,0.10)')
+                 :             'none';
+    const stroke = isPending ? '#ea580c'
+                 : rMode     ? (isLinked ? '#16a34a' : '#ea580c')
+                 :             'rgba(148,163,184,0.3)';
+    const label = rMode
+      ? `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" text-anchor="middle" dominant-baseline="central"
+           font-size="11" font-weight="700" fill="${stroke}" pointer-events="none"
+           font-family="-apple-system,BlinkMacSystemFont,sans-serif">${r.room}</text>`
+      : '';
     return `<rect
       x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="2"
-      fill="${isPending ? 'rgba(234,88,12,0.18)' : 'none'}"
-      stroke="${isPending ? '#ea580c' : 'rgba(148,163,184,0.3)'}"
-      stroke-width="${isPending ? 2 : 1}"
+      fill="${fill}"
+      stroke="${stroke}"
+      stroke-width="${isPending ? 2.5 : rMode ? 1.5 : 1}"
+      ${rMode && !isLinked && !isPending ? 'stroke-dasharray="4 3"' : ''}
       pointer-events="${rMode ? 'all' : 'none'}"
       style="cursor:${rMode ? 'pointer' : 'default'}"
       class="room-rect"
-      data-room="${r.room}" data-floor="${r.floor}"/>`;
+      data-room="${r.room}" data-floor="${r.floor}"/>${label}`;
   }).join('');
 }
 

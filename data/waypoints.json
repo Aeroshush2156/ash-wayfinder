@@ -975,6 +975,12 @@
       "qrLabel": "Modern Languages (lower) Math (upper)",
       "qrRoom": "1.64",
       "qrZone": "ml_english_hallway"
+    },
+    {
+      "id": "wp_140",
+      "x": 1750,
+      "y": 780,
+      "floor": 1
     }
   ],
   "edges": [
@@ -1113,10 +1119,6 @@
     {
       "from": "wp_068",
       "to": "wp_046"
-    },
-    {
-      "from": "wp_046",
-      "to": "wp_047"
     },
     {
       "from": "wp_050",
@@ -1453,6 +1455,14 @@
     {
       "from": "wp_139",
       "to": "wp_013"
+    },
+    {
+      "from": "wp_047",
+      "to": "wp_140"
+    },
+    {
+      "from": "wp_140",
+      "to": "wp_046"
     },
     {
       "from": "wp_070",
@@ -2337,6 +2347,16 @@
       "room": "2.33",
       "floor": 1,
       "waypointId": "wp_110"
+    },
+    {
+      "room": "2.94",
+      "floor": 1,
+      "waypointId": "wp_140"
+    },
+    {
+      "room": "M3",
+      "floor": 0,
+      "waypointId": "wp_104"
     }
   ]
 }

@@ -23,7 +23,9 @@ const zones = [
   {id:"library_ms_hallway", floor:0, label:"Library/MS Hallway", emoji:undefined, type:"special", x:763, y:639, w:20, h:138},
   {id:"central_office", floor:0, label:"Central Office", emoji:undefined, type:"special", x:722, y:841, w:40, h:40},
   {id:"central_office_hallway", floor:0, label:"Central Office Hallway", emoji:undefined, type:"special", x:769, y:794, w:20, h:143},
+  {id:"pod", floor:0, label:"Pod", emoji:undefined, type:"special", x:717, y:621, w:48, h:39},
   {id:"secondary_admin", floor:0, label:"Secondary Admin", emoji:undefined, type:"special", x:795, y:788, w:40, h:22},
+  {id:"kmr", floor:0, label:"KMR", emoji:undefined, type:"special", x:774, y:1251, w:245, h:155},
 
   // FIRST FLOOR
   {id:"health_wt", floor:1, label:"Health / Weight", emoji:undefined, type:"special", x:1561, y:290, w:50, h:342},

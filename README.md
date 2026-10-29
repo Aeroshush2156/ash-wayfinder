@@ -32,6 +32,7 @@ data/
   rooms.json               Room number → floor-plan rectangle mapping
   waypoints.json           Pathfinding node/edge graph, stairwells, QR anchor tags
   qrpoints.json            Derived list of QR anchor points (id, label, room, floor, zone)
+  places.json              Searchable specialized rooms/offices (cafeteria, nurse, library, ...)
 floorplan.jpg             The floor plan image both floors are cropped from
 scripts/
   generate_qr_codes.py    Regenerates the printable QR code PDF from data/qrpoints.json
@@ -101,3 +102,21 @@ The **📋 Import CSV** button on the main app (admin gated) is a quick way to p
 ```
 
 `zone` must match an id in `js/zones.js`, and `room` should exist in `data/rooms.json` for the room to be found on the map.
+
+### Adding specialized rooms and offices (places)
+
+`data/places.json` holds non-person destinations that show up first in search (gold badge). Each entry:
+
+```json
+{ "name": "Nurse's Office", "type": "Health Office",
+  "aliases": ["nurse", "health office", "sick"],
+  "floor": 0, "zone": "nurse", "room": "1.28", "routeRoom": null }
+```
+
+- `aliases` are the words people will actually type ("lunch", "front desk", "principal").
+- `room` — set when the place *is* a mapped room; that room gets highlighted and routed to.
+- `routeRoom` — for open areas with no room rect (cafeteria, atrium), the nearest connected room to route through; the zone is highlighted instead.
+- `note` (optional) — extra guidance shown in the directions and as a step before arrival, e.g. that M3 is below ground.
+- Both rooms must exist in `roomConnections` in `data/waypoints.json`, or no route is drawn.
+
+Support staff (nurse, principals, registrar, etc.) go in `data/staff.json` like teachers, with a non-teaching `role`; search matches on role, so "nurse" finds both the office and the person.

@@ -7,6 +7,7 @@ let destZone  = null;
 let destRoom  = null;   // resolved room used for pathfinding
 let destRoomFromZone = false; // true when destRoom was resolved from a zone tap (not an explicit room/person)
 let destPerson = null;
+let destPlace  = null;   // specialized room / office from data/places.json
 let mapScale  = 1;
 let youRoom   = null;   // { room, floor } — user's precise starting room
 let currentPath = null; // last A* result from Pathfinding.findPath()
@@ -66,6 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── LOAD DATA ───────────────────────────────────────────────────────────────
 let staff = [];
 let rooms = [];
+let places = [];
+
+// Specialized rooms and offices (cafeteria, nurse, library, ...) — searchable
+// destinations alongside staff. Optional: search still works without it.
+fetch("data/places.json")
+  .then(r => { if (!r.ok) throw new Error("places fetch failed"); return r.json(); })
+  .then(data => { places = Array.isArray(data) ? data : []; console.log("[places] loaded", places.length); })
+  .catch(e => console.warn("[places] not loaded:", e));
 
 // Load staff — triggers the initial render
 fetch("data/staff.json")
@@ -305,6 +314,7 @@ function zoneClick(id) {
     destRoom = resolveDestRoom(id);
     destRoomFromZone = true;
     destPerson = null;
+    destPlace = null;
     currentPath = null;
     if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
     recalculatePath();
@@ -405,7 +415,7 @@ function updateStatus() {
   } else if (!destZone) {
     const z = zones.find(x => x.id === youZone);
     pill.className="status-pill blue"; pill.textContent="📍 " + z.label;
-    txt.textContent="Now search for a teacher or tap a destination"; btn.style.display="inline";
+    txt.textContent="Now search for a person or place, or tap a destination"; btn.style.display="inline";
   } else {
     const yz = zones.find(x => x.id === youZone);
     const dz = zones.find(x => x.id === destZone);
@@ -416,17 +426,27 @@ function updateStatus() {
 }
 
 // ─── INFO PANEL ─────────────────────────────────────────────────────────────
+// "the Cafeteria", but "M3", "KMR", "The Nest" as-is
+function placeRef(p) {
+  return /^the\s/i.test(p.name) || /^[A-Z0-9]+$/.test(p.name) ? p.name : `the ${p.name}`;
+}
+
 function showInfo(zone, person) {
   destZone = zone.id;
   destPerson = person;
 
+  // A searched place (cafeteria, nurse, ...) only applies when it's for this zone
+  const place = (!person && destPlace && destPlace.zone === zone.id) ? destPlace : null;
+  const destName = person ? person.name : place ? place.name : zone.label;
+
   const emoji = person ? (DEPT_EMOJI[person.dept] || "👤") : "🏫";
   document.getElementById("info-avatar").textContent = emoji;
-  document.getElementById("info-name").textContent = person ? person.name : zone.label;
-  document.getElementById("info-role").textContent = person ? person.role : (zone.dept || "");
+  document.getElementById("info-name").textContent = destName;
+  document.getElementById("info-role").textContent = person ? person.role : place ? place.type : (zone.dept || "");
 
-  document.getElementById("badge-room").textContent = person ? "Room " + person.room : "";
-  document.getElementById("badge-room").style.display = person ? "" : "none";
+  const roomText = person ? person.room : place ? place.room : "";
+  document.getElementById("badge-room").textContent = roomText ? "Room " + roomText : "";
+  document.getElementById("badge-room").style.display = roomText ? "" : "none";
   document.getElementById("badge-floor").textContent = "Floor " + (zone.floor === 0 ? "Ground" : "First");
   document.getElementById("badge-dept").textContent = person ? person.dept : zone.label;
 
@@ -438,12 +458,15 @@ function showInfo(zone, person) {
     const yz = zones.find(z => z.id === youZone);
     if (yz.floor !== zone.floor) {
       const up = zone.floor > yz.floor;
-      dir = `Head to the stairs from ${yz.label} and go ${up?"up to the First":"down to the Ground"} Floor. Then make your way to the ${zone.label} area${person ? " and look for " + person.name + "." : "."}`;
+      const target = place ? placeRef(place) : `the ${zone.label} area`;
+      dir = `Head to the stairs from ${yz.label} and go ${up?"up to the First":"down to the Ground"} Floor. Then make your way to ${target}${person ? " and look for " + person.name + "." : "."}`;
     } else {
       const personStr = person ? `Ask for ${person.name}${person.room ? " in room " + person.room : ""}.` : "";
-      dir = `From ${yz.label}, head to the ${zone.label} area on the ${zone.floor===0?"Ground":"First"} Floor. ${personStr}`;
+      const target = place ? placeRef(place) : `the ${zone.label} area`;
+      dir = `From ${yz.label}, head to ${target} on the ${zone.floor===0?"Ground":"First"} Floor. ${personStr}`;
     }
   }
+  if (place && place.note) dir = `${dir.trim()} ${place.note}`;
   document.getElementById("dir-text").textContent = dir;
   document.getElementById("raw-room").textContent = person && person.room_raw && person.room_raw !== person.room
     ? "All listed locations: " + person.room_raw : "";
@@ -453,11 +476,17 @@ function showInfo(zone, person) {
   const instrEl = document.getElementById("path-instructions");
   if (instrEl) {
     if (currentPath && currentPath.instructions && currentPath.instructions.length) {
+      // A place note (e.g. "M3 is below ground level") goes in just before arrival
+      const steps = currentPath.instructions.slice();
+      if (place && place.note) {
+        const last = steps.length - 1;
+        steps.splice(steps[last].startsWith("Arrive at") ? last : steps.length, 0, place.note);
+      }
       instrEl.style.display = "";
       instrEl.innerHTML =
         `<div class="steps-header">Step-by-step directions</div>
          <div class="steps-list">` +
-        currentPath.instructions.map((step, i) => {
+        steps.map((step, i) => {
           const isArrive = step.startsWith("Arrive at");
           const isStairs = step.startsWith("Take the stairs");
           const cls  = isArrive ? "step-item step-arrive"
@@ -511,7 +540,7 @@ function showInfo(zone, person) {
   // Populate collapsed-state preview
   const previewDest = document.getElementById('sheet-preview-dest');
   const previewStep = document.getElementById('sheet-preview-step');
-  if (previewDest) previewDest.textContent = person ? person.name : zone.label;
+  if (previewDest) previewDest.textContent = destName;
   if (previewStep) {
     // Once a route is drawn, don't show the raw first instruction step here —
     // it read as plain info text and people didn't realize tapping it opens
@@ -559,6 +588,7 @@ function roomClick(room, floor) {
     destZone = zoneId;
     destRoom = null;
     destPerson = null;
+    destPlace = null;
     currentPath = null;
     if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
     const zone = zones.find(z => z.id === zoneId);
@@ -636,9 +666,11 @@ function recalculatePath() {
   const startLabel = youRoom
     ? (youRoom.label || `Room ${startRoom.room}`)
     : (zones.find(z => z.id === youZone)?.label || `Room ${startRoom.room}`);
-  const destLabel = destRoomFromZone
-    ? (zones.find(z => z.id === destZone)?.label || `Room ${destRoom.room}`)
-    : `Room ${destRoom.room}`;
+  const destLabel = destPlace
+    ? destPlace.name
+    : destRoomFromZone
+      ? (zones.find(z => z.id === destZone)?.label || `Room ${destRoom.room}`)
+      : `Room ${destRoom.room}`;
   // ── Detailed diagnostics ───────────────────────────────────────────────────
   const { roomConnections, wpMap, aStarDebug } = Pathfinding.debugData();
   const sConn = roomConnections.find(c => c.room === String(startRoom.room) && c.floor === startRoom.floor);
@@ -676,7 +708,7 @@ function recalculatePath() {
 }
 
 function clearAll() {
-  youZone = null; destZone = null; destRoom = null; destRoomFromZone = false; destPerson = null;
+  youZone = null; destZone = null; destRoom = null; destRoomFromZone = false; destPerson = null; destPlace = null;
   youRoom = null; currentPath = null;
   if (window.location.search) history.replaceState(null, "", window.location.pathname);
   if (typeof Pathfinding !== "undefined") Pathfinding.clearPath();
