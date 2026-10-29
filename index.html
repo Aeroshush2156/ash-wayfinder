@@ -67,9 +67,9 @@
       <div class="hs-text">Search for a person, room, or place</div>
       <span class="hs-tap-hint" aria-hidden="true">🔍</span>
     </div>
-    <div class="howto-step" id="hs2">
+    <div class="howto-step" id="hs2" onclick="step2Tap()" role="button" tabindex="0" aria-label="Step 2 — tap to type your location">
       <div class="hs-num" id="hn2">2</div>
-      <div class="hs-text">Tap your current location on the map</div>
+      <div class="hs-text">Tap your location on the map, or type a room</div>
     </div>
     <div class="howto-step" id="hs3">
       <div class="hs-num" id="hn3">3</div>
@@ -84,6 +84,15 @@
     <input class="search-input" id="search" type="text" placeholder="Search a name, room, or place (nurse, cafeteria…)" autocomplete="off" oninput="onSearch(this.value)" onfocus="onSearch(this.value)">
     <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
     <div class="dropdown" id="dropdown"></div>
+  </div>
+</div>
+
+<div class="search-section" id="from-section">
+  <div class="search-wrap">
+    <span class="search-icon">📍</span>
+    <input class="search-input" id="from-search" type="text" placeholder="Where are you? Room number or place…" autocomplete="off" oninput="onFromSearch(this.value)" onfocus="onFromSearch(this.value)">
+    <button class="search-clear" id="from-clear" onclick="clearFromSearch()">✕</button>
+    <div class="dropdown" id="from-dropdown"></div>
   </div>
 </div>
 

@@ -336,6 +336,16 @@ function _syncSearchVisibility() {
   const step1Done = !!(destZone || destPerson);
   const show = !step1Done && !banner.classList.contains('howto-collapsed');
   searchSection.classList.toggle('search-open', show);
+  // Start-point box: shown once a destination is picked, until a start is set
+  const fromSection = document.getElementById('from-section');
+  if (fromSection) {
+    const showFrom = step1Done && !youZone && !banner.classList.contains('howto-collapsed');
+    fromSection.classList.toggle('search-open', showFrom);
+    if (!showFrom) {
+      const fdd = document.getElementById('from-dropdown');
+      if (fdd) fdd.classList.remove('open');
+    }
+  }
   if (!show) {
     const dd = document.getElementById('dropdown');
     if (dd) dd.classList.remove('open');
@@ -404,6 +414,17 @@ function step1Tap() {
   setTimeout(() => { const inp = document.getElementById('search'); if (inp) inp.focus(); }, 150);
 }
 
+// Tapping step 2 opens the "where are you?" box (once a destination is picked).
+function step2Tap() {
+  if (youZone || !(destZone || destPerson)) return;
+  const banner = document.getElementById('howto-banner');
+  if (banner && banner.classList.contains('howto-collapsed')) {
+    banner.classList.remove('howto-collapsed');
+    _syncSearchVisibility();
+  }
+  setTimeout(() => { const inp = document.getElementById('from-search'); if (inp) inp.focus(); }, 150);
+}
+
 // ─── STATUS BAR ─────────────────────────────────────────────────────────────
 function updateStatus() {
   const pill = document.getElementById("status-pill");
@@ -411,16 +432,16 @@ function updateStatus() {
   const btn  = document.getElementById("clear-btn");
   if (!youZone) {
     pill.className="status-pill gray"; pill.textContent="No location";
-    txt.textContent="Tap a zone on the map to set your location"; btn.style.display="none";
+    txt.textContent="Tap the map or type a room to set your location"; btn.style.display="none";
   } else if (!destZone) {
     const z = zones.find(x => x.id === youZone);
-    pill.className="status-pill blue"; pill.textContent="📍 " + z.label;
+    pill.className="status-pill blue"; pill.textContent="📍 " + ((youRoom && youRoom.label) || z.label);
     txt.textContent="Now search for a person or place, or tap a destination"; btn.style.display="inline";
   } else {
     const yz = zones.find(x => x.id === youZone);
     const dz = zones.find(x => x.id === destZone);
     pill.className="status-pill red"; pill.textContent="🎯 " + dz.label;
-    txt.textContent="From " + yz.label; btn.style.display="inline";
+    txt.textContent="From " + ((youRoom && youRoom.label) || yz.label); btn.style.display="inline";
   }
   updateHowTo();
 }
@@ -456,14 +477,15 @@ function showInfo(zone, person) {
     dir = "Tap a zone on the map to set your starting location and get directions here.";
   } else {
     const yz = zones.find(z => z.id === youZone);
+    const fromLabel = (youRoom && youRoom.label) || yz.label;
     if (yz.floor !== zone.floor) {
       const up = zone.floor > yz.floor;
       const target = place ? placeRef(place) : `the ${zone.label} area`;
-      dir = `Head to the stairs from ${yz.label} and go ${up?"up to the First":"down to the Ground"} Floor. Then make your way to ${target}${person ? " and look for " + person.name + "." : "."}`;
+      dir = `Head to the stairs from ${fromLabel} and go ${up?"up to the First":"down to the Ground"} Floor. Then make your way to ${target}${person ? " and look for " + person.name + "." : "."}`;
     } else {
       const personStr = person ? `Ask for ${person.name}${person.room ? " in room " + person.room : ""}.` : "";
       const target = place ? placeRef(place) : `the ${zone.label} area`;
-      dir = `From ${yz.label}, head to ${target} on the ${zone.floor===0?"Ground":"First"} Floor. ${personStr}`;
+      dir = `From ${fromLabel}, head to ${target} on the ${zone.floor===0?"Ground":"First"} Floor. ${personStr}`;
     }
   }
   if (place && place.note) dir = `${dir.trim()} ${place.note}`;
@@ -719,6 +741,7 @@ function clearAll() {
   const staffListEl = document.getElementById("zone-staff-list");
   if (staffListEl) { staffListEl.style.display = "none"; staffListEl.innerHTML = ""; }
   clearSearch();
+  if (typeof clearFromSearch === "function") clearFromSearch();
   // Re-expand the banner so step 1 is visible and the search bar reappears
   const howto = document.getElementById('howto-banner');
   if (howto) howto.classList.remove('howto-collapsed');

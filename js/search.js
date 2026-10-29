@@ -137,3 +137,110 @@ document.addEventListener("DOMContentLoaded", function () {
     if (item) selectPerson(item.dataset.name);
   });
 });
+
+// ─── START POINT SEARCH ───────────────────────────────────────────────────────
+// Lets people type where they are (room number, place, or a person's room)
+// instead of tapping the map. Only rooms the pathfinder can route from are offered.
+function _routableRooms() {
+  if (typeof Pathfinding === "undefined") return [];
+  return Pathfinding.debugData().roomConnections || [];
+}
+
+function _isRoutable(room, floor) {
+  return _routableRooms().some(c => c.room === String(room) && c.floor === floor);
+}
+
+function _startOptions(q) {
+  const opts = [];
+  const seen = new Set();
+  const add = o => {
+    const key = o.room + "|" + o.floor;
+    if (seen.has(key + "|" + o.label) || !_isRoutable(o.room, o.floor)) return;
+    seen.add(key + "|" + o.label);
+    opts.push(o);
+  };
+  places.forEach(p => {
+    const hit = p.name.toLowerCase().includes(q) || (p.aliases || []).some(a => a.toLowerCase().includes(q));
+    if (hit) add({ label: p.name, sub: p.type, room: p.room || p.routeRoom, floor: p.floor, zone: p.zone });
+  });
+  _routableRooms().slice()
+    .sort((a, b) => String(a.room).localeCompare(String(b.room), undefined, { numeric: true }))
+    .forEach(c => {
+    if (String(c.room).toLowerCase().startsWith(q)) add({ label: `Room ${c.room}`, sub: "Room", room: c.room, floor: c.floor });
+  });
+  staff.forEach(s => {
+    if (s.room && s.name.toLowerCase().includes(q)) add({ label: `${s.name}'s room`, sub: `Room ${s.room}`, room: s.room, floor: s.floor, zone: s.zone });
+  });
+  return opts.slice(0, 8);
+}
+
+let _fromOptions = [];
+function onFromSearch(val) {
+  const dd = document.getElementById("from-dropdown");
+  document.getElementById("from-clear").style.display = val ? "block" : "none";
+  const q = val.toLowerCase().trim();
+  if (!q) { dd.classList.remove("open"); return; }
+  _fromOptions = _startOptions(q);
+  if (!_fromOptions.length) {
+    dd.innerHTML = `<div class="dd-item"><div class="dd-left"><div class="dd-name" style="color:#aaa">No matching room or place</div></div></div>`;
+    dd.classList.add("open"); return;
+  }
+  dd.innerHTML = _fromOptions.map((o, i) => `<div class="dd-item" data-from="${i}">
+      <div class="dd-left">
+        <div class="dd-name">${o.label}</div>
+        <div class="dd-role">${o.sub}</div>
+      </div>
+      <div class="dd-badge">${o.floor === 0 ? "Ground" : "First"} · ${o.room}</div>
+    </div>`).join("");
+  dd.classList.add("open");
+}
+
+// Zone for a typed start: the zone containing the room, else the nearest zone on that floor
+function _zoneForRoom(room, floor) {
+  const r = rooms.find(x => x.room === String(room) && x.floor === floor);
+  const fz = zones.filter(z => z.floor === floor);
+  if (!r || !fz.length) return fz[0] ? fz[0].id : null;
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  const inside = fz.find(z => cx >= z.x && cx <= z.x + z.w && cy >= z.y && cy <= z.y + z.h);
+  if (inside) return inside.id;
+  let best = null, bd = Infinity;
+  fz.forEach(z => {
+    const d = Math.hypot(z.x + z.w / 2 - cx, z.y + z.h / 2 - cy);
+    if (d < bd) { bd = d; best = z; }
+  });
+  return best ? best.id : null;
+}
+
+function setStartPoint(o) {
+  youRoom = { room: String(o.room), floor: o.floor, label: o.label };
+  youZone = (o.zone && zones.some(z => z.id === o.zone)) ? o.zone : _zoneForRoom(o.room, o.floor);
+  document.getElementById("from-dropdown").classList.remove("open");
+  document.getElementById("from-search").value = o.label;
+  document.getElementById("from-search").blur();
+  if (destZone) {
+    recalculatePath();
+    const zone = zones.find(z => z.id === destZone);
+    if (zone) showInfo(zone, destPerson);
+  } else {
+    if (o.floor !== currentFloor) switchFloor(o.floor);
+    updateStatus();
+    renderMap();
+  }
+}
+window.setStartPoint = setStartPoint;
+
+function clearFromSearch() {
+  const inp = document.getElementById("from-search");
+  if (inp) inp.value = "";
+  const dd = document.getElementById("from-dropdown");
+  if (dd) dd.classList.remove("open");
+  const btn = document.getElementById("from-clear");
+  if (btn) btn.style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("from-dropdown").addEventListener("click", function (e) {
+    const item = e.target.closest(".dd-item[data-from]");
+    if (item) setStartPoint(_fromOptions[+item.dataset.from]);
+  });
+});
